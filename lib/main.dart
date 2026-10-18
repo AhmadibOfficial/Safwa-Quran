@@ -4,7 +4,8 @@ import 'quran_data.dart';
 void main(){WidgetsFlutterBinding.ensureInitialized();runApp(const SafwaApp());}
 const navy=Color(0xFF142547),cream=Color(0xFFF7F6F2),gold=Color(0xFFAD8744),teal=Color(0xFF187A8B);
 class SafwaApp extends StatelessWidget {
-  const SafwaApp({super.key});
+  const SafwaApp({super.key, this.repository = const QuranData()});
+  final QuranData repository;
   @override Widget build(BuildContext context)=>MaterialApp(
     title:'Safwa Quran',debugShowCheckedModeBanner:false,
     theme:ThemeData(useMaterial3:true,scaffoldBackgroundColor:cream,
@@ -12,17 +13,21 @@ class SafwaApp extends StatelessWidget {
       appBarTheme:const AppBarTheme(backgroundColor:cream,foregroundColor:navy),
       cardTheme:CardThemeData(color:Colors.white,elevation:0,
       shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(18)))),
-    home:const QuranHome());
+    home:QuranHome(repository: repository));
 }
 class QuranHome extends StatefulWidget {
-  const QuranHome({super.key});
+  const QuranHome({super.key, required this.repository});
+  final QuranData repository;
   @override State<QuranHome> createState()=>_QuranHomeState();
 }
 class _QuranHomeState extends State<QuranHome>{
-  final repo=const QuranData();
-  late final Future<List<Surah>> chapters=repo.chapters();
+  late final Future<List<Surah>> chapters;
   Set<int> saved={};int tab=0;String query='';String? lastRead;
-  @override void initState(){super.initState();_load();}
+  @override void initState(){
+    super.initState();
+    chapters=widget.repository.chapters();
+    _load();
+  }
   Future<void> _load()async{
     final p=await SharedPreferences.getInstance();
     if (mounted) {
@@ -41,7 +46,7 @@ class _QuranHomeState extends State<QuranHome>{
     }
   }
   Future<void> _read(Surah surah)async{
-    await Navigator.of(context).push(MaterialPageRoute<void>(builder:(_)=>SurahReader(surah:surah,repository:repo)));
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder:(_)=>SurahReader(surah:surah,repository:widget.repository)));
     _load();
   }
   @override Widget build(BuildContext context)=>Scaffold(
@@ -151,7 +156,9 @@ class _SurahReaderState extends State<SurahReader>{
     body:FutureBuilder<List<Ayah>?>(future:verses,builder:(context,s){
       if(s.hasError)return const Center(child:Text('Quran dataset integrity check failed.'));
       if(!s.hasData){
-        if(s.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());
+        if (s.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return const Center(child:Padding(padding:EdgeInsets.all(28),child:Column(
           mainAxisSize:MainAxisSize.min,children:[
             Icon(Icons.verified_user_outlined,color:gold,size:52),
