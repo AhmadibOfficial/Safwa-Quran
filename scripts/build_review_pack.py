@@ -120,6 +120,20 @@ def build(out_dir, source_a=SOURCE_A, source_b=SOURCE_B, catalog=CATALOG):
     rows = make_rows(first, second, refs)
     if len(rows) != summary["remaining_count"]:
         raise IntegrityError("Unexpected Quran review queue size")
+    # Do not erase actual reviewer work when a dossier is regenerated.
+    # Blank templates may be recreated, but once any review field is filled,
+    # require a different output directory and preserve that evidence.
+    for name in ("reviewer_1_worksheet.csv", "reviewer_2_worksheet.csv"):
+        existing = out_dir / name
+        if existing.exists():
+            with existing.open("r", encoding="utf-8-sig", newline="") as fh:
+                reader = csv.DictReader(fh)
+                if reader.fieldnames is None or "reference" not in reader.fieldnames:
+                    raise IntegrityError("Unexpected existing reviewer worksheet format")
+                for row in reader:
+                    if any(str(value or "").strip() for key,value in row.items()
+                           if key != "reference"):
+                        raise IntegrityError("Completed reviewer work would be overwritten; use a different output directory")
     out_dir.mkdir(parents=True, exist_ok=True)
     with (out_dir / "unresolved_verses.csv").open("w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=["reference", "primary", "secondary", "unicode_operations"])
