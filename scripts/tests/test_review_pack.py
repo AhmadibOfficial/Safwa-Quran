@@ -55,6 +55,22 @@ class ReviewPackTests(unittest.TestCase):
                     hashlib.sha256(filename.read_bytes()).hexdigest(),
                 )
 
+    def test_regeneration_refuses_overwriting_completed_reviewer_work(self):
+        with tempfile.TemporaryDirectory() as root:
+            folder = Path(root) / "review-pack"
+            build(folder)
+            worksheet = folder / "reviewer_1_worksheet.csv"
+            original = worksheet.read_text(encoding="utf-8")
+            rows = original.splitlines()
+            cells = rows[1].split(",")
+            cells[1] = "Reviewed by person"
+            rows[1] = ",".join(cells)
+            worksheet.write_text("\n".join(rows) + "\n", encoding="utf-8")
+            with self.assertRaises(IntegrityError):
+                build(folder)
+            self.assertEqual(worksheet.read_text(encoding="utf-8").splitlines()[1].split(",")[1],
+                             "Reviewed by person")
+
     def test_review_queue_retains_original_text(self):
         first = {(1, 1): "بِسْمِ"}
         second = {(1, 1): "بِسْم"}
