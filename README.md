@@ -1,7 +1,7 @@
 # Safwa Quran — صفوة القرآن
 Official Safwa Institute Flutter project. Project source is private.
 
-SAFWA-003: 114-surah offline directory, search, reading interface, persisted Surah and ayah bookmarks, adjustable Arabic font, continue-reading progress, fail-closed verified-text gate, and automated CI checks. The *complete 6,236-ayah Quran dataset is not bundled or independently approved yet*.
+SAFWA-003: 114-surah offline directory, search, reading interface, persisted Surah and ayah bookmarks, adjustable Arabic font, continue-reading progress, fail-closed verified-text gate, and automated CI checks. A **complete 6,236-ayah original-source copy and verbatim-matched JSON candidate now exist in `sources/review_only/`**. They are NOT bundled in the application or independently approved.
 
 ## Developer setup
 1. Install Flutter stable.

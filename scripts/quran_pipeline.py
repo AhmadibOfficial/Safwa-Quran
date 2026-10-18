@@ -30,8 +30,44 @@ def catalog():
         raise IntegrityError("Quran verse count must total 6236")
     return data
 
+
+def audit_review_candidate():
+    """Verify the quarantined text and JSON candidate are the same, byte-pinned corpus.
+    These checks are NOT a substitute for two independent textual/scholarly reviews.
+    """
+    source=ROOT/"sources/review_only/tanzil_uthmani_1.1_verbatim.txt"
+    candidate=ROOT/"sources/review_only/quran_candidate.json"
+    if not source.exists() and not candidate.exists():
+        return "NOT_ACQUIRED"
+    if not source.exists() or not candidate.exists():
+        raise IntegrityError("Incomplete quarantined source pair")
+    raw=source.read_bytes()
+    manifest=json.loads(LOCK.read_text(encoding="utf-8"))
+    got=hashlib.sha1(("blob "+str(len(raw))+"\\0").encode()+raw).hexdigest()
+    if got!=manifest["mirror_git_blob_sha1"]:
+        raise IntegrityError("Pinned original Quran text blob differs")
+    if b"Tanzil Quran Text" not in raw:
+        raise IntegrityError("Copyright attribution missing from original")
+    data=json.loads(candidate.read_text(encoding="utf-8"))
+    if data.get("status")!="QUARANTINED_NOT_APPROVED" or data.get("license_url")!=manifest["license"]:
+        raise IntegrityError("Quarantine attribution/review status invalid")
+    chapters=data["chapters"]
+    validate_chapters(chapters,catalog())
+    actual=[]
+    for line in raw.decode("utf-8-sig").splitlines():
+        if line and not line.startswith("#"):
+            pair=line.split("|",2)
+            if len(pair)!=3: raise IntegrityError("Invalid source line")
+            actual.append((int(pair[0]),int(pair[1]),pair[2]))
+    copied=[(row["number"],v["number"],v["text"])
+            for row in chapters for v in row["verses"]]
+    if len(actual)!=6236 or actual!=copied:
+        raise IntegrityError("Candidate modified original Quran characters")
+    return "SIX_THOUSAND_TWO_HUNDRED_THIRTY_SIX_VERBATIM_MATCHED"
+
 def check():
     counts=catalog()
+    audit_review_candidate()
     activation=json.loads(ACT.read_text(encoding="utf-8"))
     policy=json.loads(RELEASE.read_text(encoding="utf-8"))
     if policy.get("brand_rights_confirmed") is not True:
