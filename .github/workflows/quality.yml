@@ -1,0 +1,35 @@
+name: Safwa Quality
+on:
+  pull_request:
+  push:
+    branches: [main, 'feature/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  religious-content-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s scripts/tests -v
+      - run: python3 scripts/quran_pipeline.py check
+      - name: Confirm release cannot be accidentally enabled
+        run: |
+          if python3 scripts/quran_pipeline.py release; then
+            echo "ERROR: Unapproved release unexpectedly passed"
+            exit 1
+          fi
+  flutter-application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter create --project-name safwa_quran --org org.safwa.institute --platforms android,ios .
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --debug

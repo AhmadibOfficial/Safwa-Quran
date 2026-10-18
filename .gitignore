@@ -1,0 +1,9 @@
+.dart_tool/
+.flutter-plugins*
+build/
+.staging/
+coverage/
+.env
+*.keystore
+*.jks
+__pycache__/
