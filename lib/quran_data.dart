@@ -18,7 +18,9 @@ class QuranData {
       return Surah(int.parse(parts[0]),parts[1],int.parse(parts[2]));
     }).toList(growable:false);
     if(rows.length!=114 || rows.asMap().entries.any((e)=>e.value.number!=e.key+1) ||
-      rows.fold<int>(0,(sum,s)=>sum+s.verseCount)!=6236)throw const FormatException('Invalid Quran chapter catalog');
+      rows.fold<int>(0,(sum,s)=>sum+s.verseCount)!=6236) {
+      throw const FormatException('Invalid Quran chapter catalog');
+    }
     return rows;
   }
   Future<List<Ayah>?> verses(int chapter)async{
@@ -37,7 +39,9 @@ class QuranData {
       if(selected['number']!=chapter)return null;
       final verses=selected['verses'] as List<dynamic>;
       final catalog=await chapters();
-      if(verses.length!=catalog[chapter-1].verseCount)return null;
+      if (verses.length != catalog[chapter-1].verseCount) {
+        return null;
+      }
       final result=<Ayah>[];
       for(var i=0;i<verses.length;i++){
         final row=verses[i] as Map<String,dynamic>;
