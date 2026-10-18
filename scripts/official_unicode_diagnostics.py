@@ -17,6 +17,27 @@ from verify_official_tanzil import (
 
 ROOT = Path(__file__).resolve().parents[1]
 OPTION_NAMES = ("marks", "sajdah", "rub", "tatweel", "stanween")
+# These characters are used in the optional me_quran sequential-tanween notation.
+# Removing them is allowed ONLY in transient comparisons, NEVER in Quran assets.
+ME_QURAN_SMALL_MEEMS = frozenset(("\u06ED", "\u06E2"))
+
+def only_added_small_meems(pinned, downloaded):
+    """True only if downloaded differs by INSERTIONS of the two small-meem marks.
+
+    A left-to-right subsequence walk preserves every source character and
+    refuses any removal, replacement, or addition of non-listed codepoints.
+    This is not a religious equivalence check.
+    """
+    at = 0
+    inserted = 0
+    for character in downloaded:
+        if at < len(pinned) and character == pinned[at]:
+            at += 1
+        elif character in ME_QURAN_SMALL_MEEMS:
+            inserted += 1
+        else:
+            return False
+    return at == len(pinned) and inserted > 0
 
 def skeleton(text):
     """Only for comparing; the original Unicode strings are never replaced."""
@@ -33,7 +54,7 @@ def character_report(counter, limit=30):
 def inspect_strings(pinned, candidate, sample_limit=12):
     if sample_limit < 0 or list(pinned) != list(candidate):
         raise IntegrityError("Aligned source order required for Unicode diagnostics")
-    exact = tatweel = marks = other = 0
+    exact = tatweel = small_meem = marks = other = 0
     removed = Counter()
     added = Counter()
     examples = []
@@ -45,6 +66,9 @@ def inspect_strings(pinned, candidate, sample_limit=12):
         if original.replace("\u0640", "") == downloaded.replace("\u0640", ""):
             tatweel += 1
             category = "tatweel_only_diagnostic"
+        elif only_added_small_meems(original, downloaded):
+            small_meem += 1
+            category = "optional_small_meem_insertions_diagnostic"
         elif skeleton(original) == skeleton(downloaded):
             marks += 1
             category = "marks_or_tatweel_diagnostic"
@@ -75,6 +99,7 @@ def inspect_strings(pinned, candidate, sample_limit=12):
             })
     return {
         "exact": exact, "tatweel_only_diagnostic": tatweel,
+        "optional_small_meem_insertions_diagnostic": small_meem,
         "marks_or_tatweel_diagnostic": marks,
         "other_string_differences": other,
         "verse_count": len(pinned),
@@ -91,6 +116,7 @@ def make_report(path, opts, samples=12):
     differences = inspect_strings(original, downloaded, samples)
     if (differences["exact"] != baseline["exact_verse_matches"] or
         differences["tatweel_only_diagnostic"] != baseline["tatweel_only_matches_diagnostic"] or
+        differences["optional_small_meem_insertions_diagnostic"] +
         differences["marks_or_tatweel_diagnostic"] +
         differences["other_string_differences"] != baseline["other_differences_count"]):
         raise IntegrityError("Unicode diagnostics do not match source-count audit")
@@ -135,6 +161,7 @@ def main():
             "download_sha256": report["download_sha256"],
             "exact": d["exact"],
             "tatweel_only_diagnostic": d["tatweel_only_diagnostic"],
+            "optional_small_meem_insertions_diagnostic": d["optional_small_meem_insertions_diagnostic"],
             "marks_or_tatweel_diagnostic": d["marks_or_tatweel_diagnostic"],
             "other_string_differences": d["other_string_differences"],
             "top_removed_codepoints": d["most_removed_codepoints"][:10],
