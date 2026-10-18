@@ -27,8 +27,11 @@ class QuranData {
     if(chapter<1||chapter>114)return null;
     try{
       final manifest=jsonDecode(await rootBundle.loadString('assets/data/content_activation.json')) as Map<String,dynamic>;
-      if(manifest['quran_reader_enabled']!=true || manifest['review_status']!='approved' ||
-        manifest['approved_source_sha256'] is! String)return null;
+      if (manifest['quran_reader_enabled'] != true ||
+          manifest['review_status'] != 'approved' ||
+          manifest['approved_source_sha256'] is! String) {
+        return null;
+      }
       final data=await rootBundle.load('assets/data/quran_verified.json');
       final bytes=data.buffer.asUint8List(data.offsetInBytes,data.lengthInBytes);
       if(sha256.convert(bytes).toString()!=manifest['approved_source_sha256'])return null;
