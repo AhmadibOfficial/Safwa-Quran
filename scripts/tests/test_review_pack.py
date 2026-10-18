@@ -1,8 +1,11 @@
+import hashlib
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from build_review_pack import codepoints, edit_operations, make_rows, build_html, IntegrityError
+from build_review_pack import codepoints, edit_operations, make_rows, build_html, build, IntegrityError
 
 
 class ReviewPackTests(unittest.TestCase):
@@ -30,6 +33,27 @@ class ReviewPackTests(unittest.TestCase):
         self.assertNotIn('<img src=x onerror=alert(1)>', report)
         self.assertIn("&lt;img", report)
         self.assertIn("NOT VERIFIED OR APPROVED", report)
+
+    def test_review_pack_manifest_is_digest_bound_and_unapproved(self):
+        with tempfile.TemporaryDirectory() as location:
+            directory = Path(location) / "review-pack"
+            manifest = build(directory)
+            self.assertEqual(manifest["unresolved_count"], 308)
+            self.assertEqual(manifest["reviewers"], [])
+            self.assertFalse(manifest["review_evidence_authenticated"])
+            self.assertFalse(manifest["release_allowed"])
+            self.assertEqual(
+                manifest["dossier_html_sha256"],
+                hashlib.sha256((directory / "index.html").read_bytes()).hexdigest(),
+            )
+            for name in ("reviewer_1", "reviewer_2"):
+                filename = directory / f"{name}_worksheet.csv"
+                self.assertTrue(filename.exists())
+                self.assertIn("reviewer_identifier", filename.read_text())
+                self.assertEqual(
+                    manifest[f"{name}_worksheet_sha256"],
+                    hashlib.sha256(filename.read_bytes()).hexdigest(),
+                )
 
     def test_review_queue_retains_original_text(self):
         first = {(1, 1): "بِسْمِ"}

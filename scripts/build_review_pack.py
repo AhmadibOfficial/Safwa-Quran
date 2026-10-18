@@ -2,6 +2,7 @@
 """Prepare a private offline source-review dossier. NEVER activates Quran assets."""
 import argparse
 import csv
+import hashlib
 from difflib import SequenceMatcher
 from html import escape
 import json
@@ -131,12 +132,37 @@ def build(out_dir, source_a=SOURCE_A, source_b=SOURCE_B, catalog=CATALOG):
                 "unicode_operations": json.dumps(row["unicode_operations"], ensure_ascii=False),
             })
     (out_dir / "index.html").write_text(build_html(rows, summary, notice), encoding="utf-8")
+    worksheet_fields = [
+        "reference", "reviewer_identifier", "reviewed_primary_sha256",
+        "official_tanzil_export_checked", "unicode_difference_assessment",
+        "reference_evidence", "reviewer_notes", "review_completed_utc"
+    ]
+    for reviewer in ("reviewer_1", "reviewer_2"):
+        # Keep these independently filled; a blank worksheet is NEVER approval.
+        with (out_dir / f"{reviewer}_worksheet.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as output:
+            writer = csv.DictWriter(output, fieldnames=worksheet_fields)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow({"reference": row["reference"]})
+
+    def sha256(path):
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
     manifest = {
         "review_status": "UNAPPROVED",
         "release_allowed": False,
         "reviewers": [],
+        "review_evidence_authenticated": False,
         "primary_git_sha1": git_sha(source_a.read_bytes()),
         "secondary_git_sha1": git_sha(source_b.read_bytes()),
+        "primary_sha256": sha256(source_a),
+        "secondary_sha256": sha256(source_b),
+        "dossier_html_sha256": sha256(out_dir / "index.html"),
+        "dossier_csv_sha256": sha256(out_dir / "unresolved_verses.csv"),
+        "reviewer_1_worksheet_sha256": sha256(out_dir / "reviewer_1_worksheet.csv"),
+        "reviewer_2_worksheet_sha256": sha256(out_dir / "reviewer_2_worksheet.csv"),
         "official_tanzil_download_verified": False,
         "unresolved_count": len(rows),
         "reference_list": refs,
