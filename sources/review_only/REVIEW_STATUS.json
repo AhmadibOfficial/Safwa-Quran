@@ -1,0 +1,12 @@
+{
+  "status": "QUARANTINED_COMPLETE_CORPUS",
+  "chapters": 114,
+  "verses": 6236,
+  "original_git_blob_sha1": "f2f03c415ea50f8493d2058ec67a90257333abe3",
+  "candidate_git_blob_sha1": "78dc98d6ffa26fec1022cdecefcc82236736cc40",
+  "full_license_notice_preserved": true,
+  "independent_text_comparison": "PENDING",
+  "reviewer_1": "PENDING",
+  "reviewer_2": "PENDING",
+  "public_release": false
+}

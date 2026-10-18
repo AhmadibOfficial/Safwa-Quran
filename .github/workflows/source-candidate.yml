@@ -1,0 +1,21 @@
+name: Quran Source Candidate (Quarantine)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  provenance-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned Tanzil Uthmani mirror and validate all verses
+        run: python3 scripts/quran_pipeline.py acquire --out .staging/candidate
+      - name: Archive evidence for independent review only
+        uses: actions/upload-artifact@v4
+        with:
+          name: safwa-quran-unreviewed-candidate
+          path: .staging/candidate/
+          retention-days: 30
+      - name: Explicitly do not approve or activate Quran content
+        run: python3 scripts/quran_pipeline.py check

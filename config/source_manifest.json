@@ -1,0 +1,8 @@
+{
+  "name": "Tanzil Uthmani 1.1",
+  "source_url": "https://tanzil.net/pub/download/index.php",
+  "mirror": "https://raw.githubusercontent.com/acfatah/tanzil/main/data/quran-uthmani.txt",
+  "mirror_git_blob_sha1": "f2f03c415ea50f8493d2058ec67a90257333abe3",
+  "license": "https://tanzil.net/docs/text_license",
+  "status": "CANDIDATE_NOT_APPROVED"
+}
