@@ -43,7 +43,7 @@ def audit_review_candidate():
         raise IntegrityError("Incomplete quarantined source pair")
     raw=source.read_bytes()
     manifest=json.loads(LOCK.read_text(encoding="utf-8"))
-    got=hashlib.sha1(("blob "+str(len(raw))+"\\0").encode()+raw).hexdigest()
+    got=hashlib.sha1(("blob "+str(len(raw))).encode()+bytes([0])+raw).hexdigest()
     if got!=manifest["mirror_git_blob_sha1"]:
         raise IntegrityError("Pinned original Quran text blob differs")
     if b"Tanzil Quran Text" not in raw:
