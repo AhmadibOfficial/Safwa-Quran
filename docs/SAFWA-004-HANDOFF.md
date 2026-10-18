@@ -30,3 +30,11 @@ provenance still need the appropriate authoritative assessment.
 
 The activation manifest, source files, app bundles and release flags are not
 changed by these commands. Keep both pull requests private and unmerged.
+
+## Protect completed reviewer work
+
+Rebuilding a dossier in the same directory is allowed while worksheets remain
+blank. If a reviewer has filled any non-reference cell in an existing worksheet,
+the dossier builder now refuses to overwrite it and asks for a new output directory.
+Preserve completed worksheets outside the generated report folder and use the
+structural handoff command; authentication and scholarly approval remain separate.
