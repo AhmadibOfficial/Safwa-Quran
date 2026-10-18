@@ -60,7 +60,8 @@ class _QuranHomeState extends State<QuranHome>{
       if(s.hasError)return const Center(child:Text('Surah directory unavailable.'));
       if(!s.hasData)return const Center(child:CircularProgressIndicator());
       final all=s.data!;
-      if(tab==0)return ListView(padding:const EdgeInsets.all(20),children:[
+      if (tab == 0) {
+        return ListView(padding:const EdgeInsets.all(20),children:[
         const SizedBox(height:28),
         const Text('SAFWA INSTITUTE  /  FAITH, KNOWLEDGE & GROWTH',
           style:TextStyle(color:teal,letterSpacing:1.1,fontSize:11,fontWeight:FontWeight.w700)),
@@ -87,6 +88,7 @@ class _QuranHomeState extends State<QuranHome>{
         const Padding(padding:EdgeInsets.all(12),child:Text('Quran text appears only when a complete, rights-cleared and independently reviewed source is activated.',
           style:TextStyle(color:teal,fontSize:12))),
       ]);
+      }
       final list=tab==2?all.where((x)=>saved.contains(x.number)).toList():
         all.where((x)=>x.englishName.toLowerCase().contains(query.toLowerCase())||x.number.toString()==query.trim()).toList();
       return Column(children:[
