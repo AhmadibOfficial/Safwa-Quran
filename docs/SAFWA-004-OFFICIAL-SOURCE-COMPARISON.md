@@ -33,3 +33,21 @@ human review, official provenance evidence, license attribution, font and
 device testing, and separate public release approval as mandatory gates.
 Neither the comparison tool nor its tests change the Quran corpus,
 reader activation flags, or public release policy.
+
+## If the example path is missing
+
+The filename `~/Downloads/tanzil-official-uthmani.txt` is a **placeholder**, not
+an automatic download. The script now prints an actionable message and suggests
+existing filenames in your Downloads directory, without claiming provenance.
+
+Open https://tanzil.net/download/ directly, select Uthmani, and choose a plain
+text output format (prefer Text with verse numbers). Record the five actual
+checkbox states. Accept the official usage terms, then download the file.
+Check its real filename on Kali:
+
+    ls -lt ~/Downloads | head -20
+    find ~/Downloads -maxdepth 2 -type f \( -iname '*uthmani*' -o -iname '*tanzil*' \)
+
+Pass the actual file with `--official "/home/ahmadib/Downloads/REAL-FILENAME.txt"`.
+The program does NOT authenticate provenance merely from a similar filename
+and does NOT fetch the mirror or edit any Quran characters.
