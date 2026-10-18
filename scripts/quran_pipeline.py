@@ -51,6 +51,13 @@ def audit_review_candidate():
     data=json.loads(candidate.read_text(encoding="utf-8"))
     if data.get("status")!="QUARANTINED_NOT_APPROVED" or data.get("license_url")!=manifest["license"]:
         raise IntegrityError("Quarantine attribution/review status invalid")
+    # The original Tanzil copyright text must remain verbatim in all substantial derivatives.
+    notice="# PLEASE DO NOT REMOVE OR CHANGE THIS COPYRIGHT BLOCK"
+    original=raw.decode("utf-8-sig")
+    if notice not in original:
+        raise IntegrityError("Tanzil copyright block missing")
+    if data.get("copyright_notice_verbatim")!=original[original.index(notice):]:
+        raise IntegrityError("Derived Quran text has lost or changed its exact source copyright block")
     chapters=data["chapters"]
     validate_chapters(chapters,catalog())
     actual=[]
@@ -134,7 +141,7 @@ def acquire(out):
             raise IntegrityError("Out of order or non-Arabic verse")
         target.append({"number":ayah,"text":parts[2]}) # Verbatim: never rewrite Arabic.
     validate_chapters(chapters,counts)
-    out.mkdir(parents=True,exist_ok=False)
+    out.mkdir(parents=True,exist_ok=True)  # Empty pre-created quarantine directories are valid.
     (out/"tanzil_source_verbatim.txt").write_bytes(raw)
     (out/"quran_candidate.json").write_text(json.dumps({"chapters":chapters},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     report={"status":"QUARANTINED_NOT_RELEASE_APPROVED","source_url":url,
