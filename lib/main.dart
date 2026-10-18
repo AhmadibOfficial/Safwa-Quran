@@ -25,16 +25,20 @@ class _QuranHomeState extends State<QuranHome>{
   @override void initState(){super.initState();_load();}
   Future<void> _load()async{
     final p=await SharedPreferences.getInstance();
-    if(mounted)setState((){
+    if (mounted) {
+      setState(() {
       saved=(p.getStringList('saved_surahs')??[]).map(int.tryParse).whereType<int>().toSet();
       lastRead=p.getString('last_read');
-    });
+      });
+    }
   }
   Future<void> _save(int id)async{
     final next={...saved};
     next.contains(id)?next.remove(id):next.add(id);
     final p=await SharedPreferences.getInstance();
-    if(await p.setStringList('saved_surahs',next.map((e)=>e.toString()).toList())&&mounted)setState(()=>saved=next);
+    if (await p.setStringList('saved_surahs',next.map((e)=>e.toString()).toList()) && mounted) {
+      setState(() => saved = next);
+    }
   }
   Future<void> _read(Surah surah)async{
     await Navigator.of(context).push(MaterialPageRoute<void>(builder:(_)=>SurahReader(surah:surah,repository:repo)));
@@ -70,7 +74,7 @@ class _QuranHomeState extends State<QuranHome>{
           FilledButton.icon(onPressed:()=>setState(()=>tab=1),
             icon:const Icon(Icons.menu_book_outlined),label:const Text('Explore the Quran')),
         ]))),
-        if(lastRead!=null)...[const SizedBox(height:15),Text('Continue from '+lastRead!,
+        if(lastRead!=null)...[const SizedBox(height:15),Text('Continue from ${lastRead!}',
           style:const TextStyle(color:teal))],
         const SizedBox(height:20),
         const Text('Begin with a Surah',style:TextStyle(color:navy,fontSize:20,fontWeight:FontWeight.w700)),
@@ -95,7 +99,7 @@ class _QuranHomeState extends State<QuranHome>{
     leading:CircleAvatar(backgroundColor:cream,child:Text(s.number.toString(),
       style:const TextStyle(color:navy))),
     title:Text(s.englishName,style:const TextStyle(fontWeight:FontWeight.w700)),
-    subtitle:Text(s.verseCount.toString()+' ayahs'),
+    subtitle:Text('${s.verseCount} ayahs'),
     onTap:()=>_read(s),
     trailing:IconButton(tooltip:'Bookmark Surah',onPressed:()=>_save(s.number),
       icon:Icon(saved.contains(s.number)?Icons.bookmark:Icons.bookmark_outline)),
@@ -112,26 +116,32 @@ class _SurahReaderState extends State<SurahReader>{
   @override void initState(){super.initState();_load();}
   Future<void> _load()async{
     final p=await SharedPreferences.getInstance();
-    if(mounted)setState((){
+    if (mounted) {
+      setState(() {
       fontSize=p.getDouble('arabic_font_size')??30;
       savedAyat=(p.getStringList('saved_ayat')??[]).toSet();
-    });
+      });
+    }
   }
   Future<void> _toggle(int verse)async{
-    final id=widget.surah.number.toString()+':'+verse.toString();
+    final id='${widget.surah.number}:$verse';
     final next={...savedAyat};
     next.contains(id)?next.remove(id):next.add(id);
     final p=await SharedPreferences.getInstance();
-    if(await p.setStringList('saved_ayat',next.toList())&&mounted)setState(()=>savedAyat=next);
+    if (await p.setStringList('saved_ayat',next.toList()) && mounted) {
+      setState(() => savedAyat = next);
+    }
   }
   Future<void> _resize(double delta)async{
     final size=(fontSize+delta).clamp(20.0,48.0);
     final p=await SharedPreferences.getInstance();
-    if(await p.setDouble('arabic_font_size',size)&&mounted)setState(()=>fontSize=size);
+    if (await p.setDouble('arabic_font_size',size) && mounted) {
+      setState(() => fontSize = size);
+    }
   }
   Future<void> _progress(int verse)async{
     final p=await SharedPreferences.getInstance();
-    await p.setString('last_read',widget.surah.number.toString()+':'+verse.toString());
+    await p.setString('last_read','${widget.surah.number}:$verse');
   }
   @override Widget build(BuildContext context)=>Scaffold(
     appBar:AppBar(title:Text(widget.surah.englishName),actions:[
@@ -157,12 +167,12 @@ class _SurahReaderState extends State<SurahReader>{
       return ListView.builder(padding:const EdgeInsets.all(14),itemCount:rows.length,
         itemBuilder:(context,index){
           final a=rows[index];
-          final id=widget.surah.number.toString()+':'+a.number.toString();
-          return Semantics(label:'Verse '+id,child:Card(child:Padding(
+          final id='${widget.surah.number}:${a.number}';
+          return Semantics(label:'Verse $id',child:Card(child:Padding(
             padding:const EdgeInsets.all(18),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
               Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[
                 Text(id,style:const TextStyle(color:teal,fontWeight:FontWeight.bold)),
-                IconButton(tooltip:'Bookmark verse '+id,onPressed:()=>_toggle(a.number),
+                IconButton(tooltip:'Bookmark verse $id',onPressed:()=>_toggle(a.number),
                   icon:Icon(savedAyat.contains(id)?Icons.bookmark:Icons.bookmark_border)),
               ]),
               Directionality(textDirection:TextDirection.rtl,child:Text(a.text,
