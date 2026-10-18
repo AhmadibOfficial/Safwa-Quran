@@ -19,6 +19,35 @@ ARABIC = re.compile(r"[\u0600-\u06ff]")
 REFERENCE_LINE = re.compile(r"^([0-9]+)\|([0-9]+)\|(.+)$")
 ALLOWED_OPTIONS = {"on", "off", "unknown"}
 
+def require_downloaded_file(path):
+    """Inspect only filenames; never substitute a mirror for an official download."""
+    chosen = path.expanduser().resolve()
+    if chosen.is_file():
+        return chosen
+    if chosen.exists():
+        raise IntegrityError(f"Official file path is not a regular file: {chosen}")
+    downloads = Path.home() / "Downloads"
+    matches = []
+    if downloads.is_dir():
+        # Suggestions are filenames only. Their provenance is NOT inferred.
+        matches = sorted(
+            (candidate for candidate in downloads.iterdir()
+             if candidate.is_file() and
+             ("tanzil" in candidate.name.casefold() or
+              "uthmani" in candidate.name.casefold())),
+            key=lambda item: item.name,
+        )[:8]
+    hint = "\nPossible existing download filenames (not authenticated): " + \
+           ", ".join(str(x) for x in matches) if matches else \
+           "\nNo likely Tanzil/Uthmani files found in ~/Downloads."
+    raise IntegrityError(
+        f"Official Tanzil text file not found: {chosen}"
+        + hint
+        + "\nDownload the original Uthmani v1.1 text at https://tanzil.net/download/ "
+        + "and pass its ACTUAL filename via --official. "
+        + "Record the selected export options; never substitute an unverified mirror."
+    )
+
 def read_official_export(raw, ordered_refs):
     """Parse plain verses or surah|ayah|text export. Preserve every character."""
     original = raw.decode("utf-8-sig")
@@ -107,7 +136,7 @@ def main():
     a=parser.parse_args()
     options={key:getattr(a,key) for key in ("marks","sajdah","rub","tatweel","stanween")}
     try:
-        result=analyze(a.official,options)
+        result=analyze(require_downloaded_file(a.official),options)
         # Evidence is quarantined; never write comparison output into Flutter assets.
         target=a.out.resolve()
         quarantine=(Path(__file__).resolve().parents[1]/".staging").resolve()
