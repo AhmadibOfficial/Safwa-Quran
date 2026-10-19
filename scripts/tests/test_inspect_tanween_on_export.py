@@ -9,8 +9,9 @@ from inspect_tanween_on_export import (
 
 class ExportForensicTests(unittest.TestCase):
     def test_only_tatweel_deletion(self):
-        a = {(1,1): "وَٱلْـَٔاخِرَة"}
-        b = {(1,1): "وَٱلَٔاخِرَة"}
+        # Remove exactly U+0640 TATWEEL, preserving U+0652 SUKUN.
+        a = {(1,1): "بِسْـم"}
+        b = {(1,1): "بِسْم"}
         result = examine_pair(a,b)
         self.assertEqual(result["categories"]["listed_annotation_deletions_only"], 1)
         self.assertEqual(result["categories"]["unicode_letter_changes_unresolved"], 0)
@@ -33,6 +34,19 @@ class ExportForensicTests(unittest.TestCase):
     def test_unauthorized_diacritic_loss_is_unresolved(self):
         r=examine_pair({(1,1):"بِس"}, {(1,1):"بس"})
         self.assertEqual(r["categories"]["other_unicode_differences_unresolved"],1)
+
+    def test_removed_sukun_cannot_be_excused_as_tatweel(self):
+        r=examine_pair({(1,1):"بِسْـم"}, {(1,1):"بِسم"})
+        self.assertEqual(r["categories"]["other_unicode_differences_unresolved"],1)
+        self.assertEqual(r["unresolved_case_diagnostics"][0]["removed_codepoints"],
+                         ["U+0640","U+0652"])
+
+    def test_unlisted_small_high_seen_requires_manual_review(self):
+        r=examine_pair({(1,1):"ب\u06dcس"}, {(1,1):"بس"})
+        self.assertEqual(r["categories"]["other_unicode_differences_unresolved"],1)
+        self.assertEqual(r["unresolved_case_diagnostics"][0]["reference"],"1:1")
+        self.assertEqual(r["unresolved_case_diagnostics"][0]["removed_codepoints"],
+                         ["U+06DC"])
 
     def test_order_and_empty_maps_fail_closed(self):
         with self.assertRaises(IntegrityError):

@@ -48,3 +48,30 @@ The same independent qualified scholar/official provenance/Arabic font
 license and device typography gates remain. The selection manifest is not
 updated automatically: a new file digest should be chosen only after its
 exact source and edition are reviewed. No reader or public release.
+
+## 2026-10-19 local 66-test finding and forensic follow-up
+
+At commit `451f7d8`, Kali reported **65/66 passed**. The failing
+`test_only_tatweel_deletion` synthetic fixture inadvertently also
+deleted U+0652 SUKUN; that must *not* be classified as a tatweel-only
+export difference. The fixture has been corrected to delete only U+0640.
+The forensic Unicode-letter comparison also now explicitly excludes
+U+0640 TATWEEL from its base-letter signature; Unicode itself
+categorizes U+0640 as Lm, which can otherwise cause a false alarm.
+
+Observed private report (before classifier fix): 1,935 exact;
+1,582 listed annotation-only deletions; 2,714 spacing changes still
+**unresolved**; 2 Unicode-letter alarms and 3 other Unicode differences.
+The removed Unicode inventory also reported **5 U+06DC ARABIC SMALL
+HIGH SEEN** codepoints, not in the permitted switch-off deletion set.
+Do **not** conclude that five U+06DC instances correspond to exactly
+five flagged verses until the revised report is run. A mark that is
+familiar in Quran text is not automatically permitted to disappear.
+
+The revised local report retains **all** actual unresolved verse pairs
+with original Arabic strings and Unicode codepoint inventories under
+`analysis.unresolved_case_diagnostics`. The CLI prints only small
+summaries of the first 50 unresolved references and changed codepoints,
+never a normalized/repaired Quran string. In particular, 2,714 spacing
+cases remain pending independent inspection of word boundaries and
+layout. **No auto-acceptance or corpus update.**

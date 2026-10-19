@@ -43,7 +43,11 @@ def deletion_of_only_allowed(old, new, removable=EXPECTED_REMOVABLE):
 
 def letters(text):
     """Strict in-order Unicode-letter signature for diagnostic alarms only."""
-    return "".join(ch for ch in text if unicodedata.category(ch).startswith("L"))
+    # U+0640 TATWEEL is Unicode category Lm (modifier letter), but it is
+    # explicitly a removable elongation mark for this export comparison.
+    # Do not misreport tatweel deletion as an Arabic base-letter change.
+    return "".join(ch for ch in text if ch != "\u0640" and
+                   unicodedata.category(ch).startswith("L"))
 
 
 def examine_pair(reference, current, sample_limit=12):
@@ -55,6 +59,7 @@ def examine_pair(reference, current, sample_limit=12):
     absent = Counter()
     added = Counter()
     examples = []
+    unresolved = []
     for ref, original in reference.items():
         selected = current[ref]
         if original == selected:
@@ -70,6 +75,19 @@ def examine_pair(reference, current, sample_limit=12):
         else:
             classification = "other_unicode_differences_unresolved"
         counts[classification] += 1
+        if classification in ("unicode_letter_changes_unresolved",
+                              "other_unicode_differences_unresolved"):
+            previous, proposed = Counter(original), Counter(selected)
+            unresolved.append({
+                "reference": f"{ref[0]}:{ref[1]}",
+                "classification": classification,
+                "removed_codepoints": [f"U+{ord(c):04X}"
+                                       for c in sorted(previous - proposed)],
+                "added_codepoints": [f"U+{ord(c):04X}"
+                                     for c in sorted(proposed - previous)],
+                "older_original_verbatim": original,
+                "new_original_verbatim": selected,
+            })
         if original != selected:
             # Character inventories are unambiguous; alignment opcodes aren't
             # necessarily unambiguous in repeated Arabic strings.
@@ -105,6 +123,9 @@ def examine_pair(reference, current, sample_limit=12):
         "missing_character_inventory": codepoints(absent),
         "new_character_inventory": codepoints(added),
         "example_verbatim_pairs": examples,
+        # All unresolved verse strings go only into the ignored local report;
+        # the terminal prints limited codepoints and references, not Arabic text.
+        "unresolved_case_diagnostics": unresolved,
         "warning": "Even 'listed annotation deletions only' is a technical relationship, not confirmation that the new Arabic rendition is religiously sufficient. All spacing changes are independently unresolved.",
     }
 
@@ -174,6 +195,12 @@ def main():
             "categories": a["categories"],
             "missing_character_inventory": a["missing_character_inventory"][:30],
             "new_character_inventory": a["new_character_inventory"][:30],
+            "unresolved_case_count": len(a["unresolved_case_diagnostics"]),
+            "unresolved_case_summaries": [
+                {k: v for k, v in item.items()
+                 if k not in ("older_original_verbatim", "new_original_verbatim")}
+                for item in a["unresolved_case_diagnostics"][:50]
+            ],
             "private_report": str(target),
             "approval": "PENDING", "release": "BLOCKED"
         }, ensure_ascii=False, indent=2))
