@@ -20,7 +20,7 @@ void main() {
         again.events.map((e) => e.at).toList());
   });
 
-  test('next day Fajr follows today's Isha', () {
+  test("next day Fajr follows today's Isha", () {
     final calculator = PrayerTimeService();
     final city = prayerCities.first;
     final today = calculator.forInstant(
