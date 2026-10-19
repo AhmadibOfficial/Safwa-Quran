@@ -63,3 +63,47 @@ No generated report, hash match or test run authorizes content activation,
 production app bundling, merge or public release. The original
 `assets/data/content_activation.json` and `config/release_policy.json`
 stay unchanged and false. This selected candidate is NOT approved.
+
+## Export settings reported by the user on 2026-10-19
+
+The user reported using this exact Tanzil export configuration:
+
+| Setting | User-declared value |
+| --- | --- |
+| Quran text type | Uthmani v1.1 |
+| Pause marks (`marks`) | OFF |
+| Sajdah (`sajdah`) | OFF |
+| Rub-el-Hizb (`rub`) | OFF |
+| Tatweel (`tatweel`) | OFF |
+| Sequential tanweens (`stanween`) | ON |
+
+This records **user-stated choices**, not independently authenticated
+download form metadata. The last tested ON candidate remains pinned to
+SHA-256 `aa0bf9278a177a12e6d9bef621ce37a1d24fa35168b5ae9c13ebcbe01e3686cf`.
+The user subsequently reported another download, whose actual path and hash
+have **not** yet been supplied. Do not silently assume the new download
+matches the previously fingerprinted candidate.
+
+On Kali, identify the latest file and verify its actual SHA-256:
+
+    ls -lt "$HOME"/Downloads/quran-uthmani*.txt
+    sha256sum "$HOME"/Downloads/quran-uthmani*.txt
+
+If its hash matches the existing selected ON digest, the present
+`prove_selected_tanween.py --source "ACTUAL_FILE_PATH"` can
+repeat the same technical content proof with all options now declared.
+If it does not match, do not edit the original files or update this SHA
+automatically: quarantine the new download, inspect its declared text
+edition/format/options and reproduce the source verification.
+
+Choosing pause, sajdah and rub-el-Hizb marks OFF does not itself establish
+the selected Mushaf presentation is sufficient for users. Reviewers must
+assess which signs must be visible in the intended Quran-reading experience.
+Keep the OFF toggle choices as recorded rather than quietly changing them.
+
+The source provenance and user-selected option evidence still need
+independent authentication. Two qualified independent Quran reviewers
+must sign against the unchanged **ON text-content fingerprint**
+`d963564ae68da10cf368a5405bd243d036022c207201ea6293a71ee18ce0cfce`
+after the intended source is confirmed; compatible licensed-font
+rendering remains required. Reader activation and public release stay BLOCKED.

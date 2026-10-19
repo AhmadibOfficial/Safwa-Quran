@@ -6,10 +6,10 @@
   "selected_original_file_sha256": "aa0bf9278a177a12e6d9bef621ce37a1d24fa35168b5ae9c13ebcbe01e3686cf",
   "original_filename_example": "quran-uthmani.txt",
   "declared_export_options": {
-    "marks": "unknown",
-    "sajdah": "unknown",
-    "rub": "unknown",
-    "tatweel": "unknown",
+    "marks": "off",
+    "sajdah": "off",
+    "rub": "off",
+    "tatweel": "off",
     "stanween": "on"
   },
   "previously_observed_diagnostics": {
@@ -26,5 +26,13 @@
   "scholarly_review": "PENDING",
   "reader_activation_enabled": false,
   "public_release_allowed": false,
-  "note": "This is a product-intent selection only; the downloadable Quran file remains in private evidence and is not bundled or promoted to active app assets."
+  "note": "This is a product-intent selection only; the downloadable Quran file remains in private evidence and is not bundled or promoted to active app assets.",
+  "export_settings_evidence": {
+    "status": "USER_DECLARED_NOT_INDEPENDENTLY_AUTHENTICATED",
+    "declaration_received_date": "2026-10-19",
+    "source": "User-provided record of Tanzil download settings",
+    "pinned_selected_file_hash_rechecked_after_declaration": false,
+    "direct_official_download_provenance_verified": false,
+    "note": "These settings are the user's declaration. Do not infer they are independently linked to the previously hashed ON file until the latest downloaded file is checked. A matching digest proves file identity, not the operator's site interactions."
+  }
 }
