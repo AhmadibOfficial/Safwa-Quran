@@ -60,6 +60,7 @@ def examine_pair(reference, current, sample_limit=12):
     added = Counter()
     examples = []
     unresolved = []
+    spacing_cases = []
     for ref, original in reference.items():
         selected = current[ref]
         if original == selected:
@@ -75,6 +76,16 @@ def examine_pair(reference, current, sample_limit=12):
         else:
             classification = "other_unicode_differences_unresolved"
         counts[classification] += 1
+        if classification == "spacing_changes_need_manual_review":
+            before, after = Counter(original), Counter(selected)
+            spacing_cases.append({
+                "reference": f"{ref[0]}:{ref[1]}",
+                "classification": classification,
+                "removed_space_count": max(before[" "] - after[" "], 0),
+                "added_space_count": max(after[" "] - before[" "], 0),
+                "older_original_verbatim": original,
+                "new_original_verbatim": selected,
+            })
         if classification in ("unicode_letter_changes_unresolved",
                               "other_unicode_differences_unresolved"):
             previous, proposed = Counter(original), Counter(selected)
@@ -126,6 +137,9 @@ def examine_pair(reference, current, sample_limit=12):
         # All unresolved verse strings go only into the ignored local report;
         # the terminal prints limited codepoints and references, not Arabic text.
         "unresolved_case_diagnostics": unresolved,
+        # Kept privately for qualified review; stripping all spaces in a
+        # comparison NEVER authorizes removing a word boundary.
+        "spacing_case_diagnostics": spacing_cases,
         "warning": "Even 'listed annotation deletions only' is a technical relationship, not confirmation that the new Arabic rendition is religiously sufficient. All spacing changes are independently unresolved.",
     }
 

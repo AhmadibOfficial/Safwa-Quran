@@ -26,6 +26,9 @@ class ExportForensicTests(unittest.TestCase):
         b={(1,1): "ب س"}
         r=examine_pair(a,b)
         self.assertEqual(r["categories"]["spacing_changes_need_manual_review"],1)
+        self.assertEqual(r["spacing_case_diagnostics"][0]["reference"],"1:1")
+        self.assertEqual(r["spacing_case_diagnostics"][0]["older_original_verbatim"],"ب \u06de س")
+        self.assertEqual(r["spacing_case_diagnostics"][0]["new_original_verbatim"],"ب س")
 
     def test_base_letter_removal_is_unresolved(self):
         r=examine_pair({(1,1):"بسم"}, {(1,1):"بم"})
