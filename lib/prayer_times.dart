@@ -19,7 +19,7 @@ const prayerCities = <PrayerCity>[
   PrayerCity('abuja', 'Abuja, Nigeria', 9.0765, 7.3986, 'Africa/Lagos'),
   PrayerCity('kano', 'Kano, Nigeria', 12.0022, 8.5920, 'Africa/Lagos'),
   PrayerCity('lagos', 'Lagos, Nigeria', 6.5244, 3.3792, 'Africa/Lagos'),
-  PrayerCity('makkah', 'Makkah, Saudi Arabia', 21.4225, 39.8262, 'Asia/Riyadh'),
+  PrayerCity('makkah', 'Makkah, Saudi Arabia', 21.3891, 39.8579, 'Asia/Riyadh'),
   PrayerCity('doha', 'Doha, Qatar', 25.2854, 51.5310, 'Asia/Qatar'),
   PrayerCity('london', 'London, UK', 51.5074, -0.1278, 'Europe/London'),
 ];

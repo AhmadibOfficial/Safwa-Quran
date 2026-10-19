@@ -1,0 +1,67 @@
+{
+  "project": "Safwa Quran | صفوة القرآن",
+  "release_authorized": false,
+  "development_branch": "feature/safwa-006-companion-features",
+  "requires_kali_flutter_validation": true,
+  "core": [
+    {
+      "module": "prayer_times",
+      "stage": "DRAFT_FUNCTIONAL_UNVERIFIED",
+      "note": "offline calculations, manual city & methods; real timetable comparison still needed"
+    },
+    {
+      "module": "qibla",
+      "stage": "DRAFT_FUNCTIONAL_UNVERIFIED",
+      "note": "bearing from true north at manual city center; no device compass"
+    },
+    {
+      "module": "salah_tracker",
+      "stage": "DRAFT_FUNCTIONAL_UNVERIFIED",
+      "note": "optional local-only daily marks, no moral or religious judgement"
+    },
+    {
+      "module": "tasbih",
+      "stage": "DRAFT_FUNCTIONAL_UNVERIFIED",
+      "note": "local tally and goal"
+    },
+    {
+      "module": "islamic_calendar",
+      "stage": "ESTIMATE_ONLY",
+      "note": "tabular Gregorian/Hijri estimate, moon-sighting not authenticated"
+    },
+    {
+      "module": "prayer_reminders",
+      "stage": "PREFERENCES_ONLY_NOT_SCHEDULED",
+      "note": "no OS notification scheduler, permissions or Adhan audio"
+    },
+    {
+      "module": "adhkar_dua",
+      "stage": "SOURCE_CONTENT_LOCKED",
+      "note": "no sourced independently approved supplications"
+    },
+    {
+      "module": "quran_recitation_audio",
+      "stage": "SOURCE_AND_AUDIO_RIGHTS_LOCKED",
+      "note": "no approved audio files"
+    },
+    {
+      "module": "learning",
+      "stage": "PLANNER_ONLY_NO_LESSONS",
+      "note": "study topic toggles, religious lessons gated"
+    },
+    {
+      "module": "language",
+      "stage": "PREFERENCE_ONLY_TRANSLATIONS_LOCKED",
+      "note": "stores English/Hausa/Arabic preference, not translated UI or Quran"
+    },
+    {
+      "module": "privacy",
+      "stage": "DRAFT_FUNCTIONAL_UNVERIFIED",
+      "note": "local data erasure with confirmation, no external sync"
+    }
+  ],
+  "quran_reader_activation": "BLOCKED",
+  "scholarly_approvals_authenticated": 0,
+  "scholarly_approvals_required": 2,
+  "public_release": "BLOCKED"
+}
