@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'quran_data.dart';
 import 'prayer_times.dart';
+import 'companion_features.dart';
 void main(){WidgetsFlutterBinding.ensureInitialized();runApp(const SafwaApp());}
 const navy=Color(0xFF142547),cream=Color(0xFFF7F6F2),gold=Color(0xFFAD8744),teal=Color(0xFF187A8B);
 class SafwaApp extends StatelessWidget {
@@ -56,8 +57,9 @@ class _QuranHomeState extends State<QuranHome>{
       destinations:const [
         NavigationDestination(icon:Icon(Icons.home_outlined),label:'Home'),
         NavigationDestination(icon:Icon(Icons.menu_book_outlined),label:'Quran'),
-        NavigationDestination(icon:Icon(Icons.bookmark_outline),label:'Saved')]),
-    body:FutureBuilder<List<Surah>>(future:chapters,builder:(context,s){
+        NavigationDestination(icon:Icon(Icons.bookmark_outline),label:'Saved'),
+        NavigationDestination(icon:Icon(Icons.apps_outlined),label:'Companion')]),
+    body: tab == 3 ? const CompanionHub() : FutureBuilder<List<Surah>>(future:chapters,builder:(context,s){
       if(s.hasError)return const Center(child:Text('Surah directory unavailable.'));
       if(!s.hasData)return const Center(child:CircularProgressIndicator());
       final all=s.data!;
