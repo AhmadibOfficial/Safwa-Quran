@@ -25,7 +25,7 @@ def content_digest(verses):
     Serialization: one surah|ayah|verbatim_verse + LF per verse.
     Original text files are neither overwritten nor re-exported.
     """
-    if len(verses) != 6236 and not verses:
+    if not verses:
         raise IntegrityError("Empty verse mapping")
     digest = hashlib.sha256()
     for key, verse in verses.items():
