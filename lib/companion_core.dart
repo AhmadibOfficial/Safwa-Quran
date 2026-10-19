@@ -23,7 +23,7 @@ double qiblaBearing(double latitude, double longitude) {
 
 String civilDateKey(DateTime date) {
   String two(int n) => n.toString().padLeft(2, '0');
-  return date.year.toString() + '-' + two(date.month) + '-' + two(date.day);
+  return '${date.year}-${two(date.month)}-${two(date.day)}';
 }
 
 const salahNames = <String>['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -31,7 +31,7 @@ const salahNames = <String>['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 /// User-directed entries only. Data saved on device, never synced.
 class LocalSalahJournal {
   const LocalSalahJournal();
-  String _key(DateTime date) => 'safwa_salah_' + civilDateKey(date);
+  String _key(DateTime date) => 'safwa_salah_${civilDateKey(date)}';
 
   Future<Set<String>> read(DateTime date) async {
     final prefs = await SharedPreferences.getInstance();
@@ -112,8 +112,7 @@ class EstimatedHijriDate {
     'Jumada al-Ula', 'Jumada al-Akhirah', 'Rajab', 'Shaaban',
     'Ramadan', 'Shawwal', 'Dhu al-Qadah', 'Dhu al-Hijjah',
   ];
-  String get label => day.toString() + ' ' +
-      monthNames[month - 1] + ' ' + year.toString() + ' AH (estimate)';
+  String get label => '$day ${monthNames[month - 1]} $year AH (estimate)';
 }
 
 int _gregorianJdn(DateTime date) {
@@ -153,7 +152,7 @@ EstimatedHijriDate approximateHijri(DateTime date, {int adjustmentDays = 0}) {
 /// Local preference ONLY; no Android/iOS notification scheduled.
 class PrayerReminderPreferences {
   const PrayerReminderPreferences();
-  static String key(String prayer) => 'safwa_remind_' + prayer;
+  static String key(String prayer) => 'safwa_remind_$prayer';
 
   Future<bool> enabled(String prayer) async {
     if (!salahNames.contains(prayer)) return false;
@@ -180,7 +179,7 @@ Future<int> clearSafwaLocalData() async {
           .contains(key)).toList();
   for (final key in keys) {
     if (!await prefs.remove(key)) {
-      throw StateError('Failed deleting ' + key);
+      throw StateError('Failed deleting $key');
     }
   }
   return keys.length;

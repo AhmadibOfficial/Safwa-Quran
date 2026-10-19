@@ -222,7 +222,7 @@ class _PrayerTimesPageState extends State<PrayerTimesPage> {
             const SizedBox(height: 20),
             DropdownButtonFormField<String>(
               key: const Key('prayer_city'),
-              value: cityId,
+              initialValue: cityId,
               isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Choose a city', border: OutlineInputBorder()),
@@ -235,7 +235,7 @@ class _PrayerTimesPageState extends State<PrayerTimesPage> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<PrayerMethod>(
-              value: method, isExpanded: true,
+              initialValue: method, isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Calculation method', border: OutlineInputBorder()),
               items: PrayerMethod.values.map((m) => DropdownMenuItem(
@@ -248,7 +248,7 @@ class _PrayerTimesPageState extends State<PrayerTimesPage> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<AsrRule>(
-              value: asr, isExpanded: true,
+              initialValue: asr, isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Asr calculation', border: OutlineInputBorder()),
               items: AsrRule.values.map((a) => DropdownMenuItem(
@@ -275,14 +275,14 @@ class _PrayerTimesPageState extends State<PrayerTimesPage> {
                   Text(city.name.toUpperCase(), style: const TextStyle(
                     color: gold, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 10),
-                  Text('Next prayer: ' + next.name,
+                  Text('Next prayer: ${next.name}',
                     style: const TextStyle(fontSize: 20, color: navy,
                       fontWeight: FontWeight.w700)),
                   Text(clock(next.at), style: const TextStyle(
                     color: navy, fontSize: 30, fontWeight: FontWeight.w800)),
-                  Text(city.zone + '  •  ' + schedule.date.year.toString()
-                    + '-' + schedule.date.month.toString().padLeft(2, '0')
-                    + '-' + schedule.date.day.toString().padLeft(2, '0')),
+                  Text('${city.zone}  •  ${schedule.date.year}-'
+                    '${schedule.date.month.toString().padLeft(2, '0')}-'
+                    '${schedule.date.day.toString().padLeft(2, '0')}'),
                 ]))),
               const SizedBox(height: 10),
               ...schedule.events.map((event) => Card(child: ListTile(

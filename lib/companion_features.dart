@@ -110,7 +110,7 @@ class _QiblaPageState extends State<QiblaPage> {
               color: _navy)),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(
-            value: selectedCity,
+            initialValue: selectedCity,
             isExpanded: true,
             decoration: const InputDecoration(
               border: OutlineInputBorder(), labelText: 'Manual city'),
@@ -130,7 +130,7 @@ class _QiblaPageState extends State<QiblaPage> {
             child: Column(children: [
               const Icon(Icons.explore_outlined, size: 74, color: _gold),
               const SizedBox(height: 12),
-              Text(bearing.toStringAsFixed(1) + '°',
+              Text('${bearing.toStringAsFixed(1)}°',
                 style: const TextStyle(fontSize: 46, color: _navy,
                   fontWeight: FontWeight.w900)),
               const Text('CLOCKWISE FROM TRUE NORTH'),
@@ -161,7 +161,9 @@ class _SalahJournalPageState extends State<SalahJournalPage> {
   @override void initState() { super.initState(); _load(); }
   Future<void> _load() async {
     final result = await store.read(day);
-    if (mounted) setState(() { recorded = result; loading = false; });
+    if (mounted) {
+      setState(() { recorded = result; loading = false; });
+    }
   }
   Future<void> _chooseDay() async {
     final chosen = await showDatePicker(context: context,
@@ -173,10 +175,14 @@ class _SalahJournalPageState extends State<SalahJournalPage> {
   Future<void> _toggle(String prayer) async {
     try {
       final updated = await store.toggle(day, prayer);
-      if (mounted) setState(() => recorded = updated);
+      if (mounted) {
+        setState(() => recorded = updated);
+      }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to save the local journal.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to save the local journal.')));
+      }
     }
   }
   @override Widget build(BuildContext context) => Scaffold(
@@ -200,7 +206,7 @@ class _SalahJournalPageState extends State<SalahJournalPage> {
         onChanged: (_) => _toggle(name),
       ))),
       const SizedBox(height: 16),
-      Text(recorded.length.toString() + ' of 5 marked by you',
+      Text('${recorded.length} of 5 marked by you',
           style: const TextStyle(color: _teal)),
     ]),
   );
@@ -218,17 +224,23 @@ class _TasbihPageState extends State<TasbihPage> {
   @override void initState() { super.initState(); _load(); }
   Future<void> _load() async {
     final values = await Future.wait([store.count(), store.goal()]);
-    if (mounted) setState(() {
-      count = values[0]; goal = values[1]; busy = false;
-    });
+    if (mounted) {
+      setState(() {
+        count = values[0]; goal = values[1]; busy = false;
+      });
+    }
   }
   Future<void> _advance() async {
     try {
       final value = await store.increment();
-      if (mounted) setState(() => count = value);
+      if (mounted) {
+        setState(() => count = value);
+      }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Counter could not be saved.')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Counter could not be saved.')));
+      }
     }
   }
   Future<void> _reset() async {
@@ -244,7 +256,9 @@ class _TasbihPageState extends State<TasbihPage> {
         ]));
     if (confirm != true) return;
     await store.reset();
-    if (mounted) setState(() => count = 0);
+    if (mounted) {
+      setState(() => count = 0);
+    }
   }
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Tasbih Counter')),
@@ -257,7 +271,7 @@ class _TasbihPageState extends State<TasbihPage> {
           Semantics(label: 'Current count', child: Text(count.toString(),
             style: const TextStyle(fontSize: 80, color: _navy,
               fontWeight: FontWeight.w900))),
-          Text('Personal target: ' + goal.toString()),
+          Text('Personal target: $goal'),
           const SizedBox(height: 20),
           SizedBox(width: 220, height: 64,
             child: FilledButton(onPressed: _advance,
@@ -267,7 +281,9 @@ class _TasbihPageState extends State<TasbihPage> {
             OutlinedButton(onPressed: () async {
               final g = goal == 33 ? 99 : 33;
               await store.setGoal(g);
-              if (mounted) setState(() => goal = g);
+              if (mounted) {
+                setState(() => goal = g);
+              }
             }, child: const Text('Switch goal 33 / 99')),
             TextButton(onPressed: _reset, child: const Text('Reset')),
           ]),
@@ -297,7 +313,7 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
         const Text('Hijri date estimate', style: TextStyle(color: _navy,
           fontSize: 25, fontWeight: FontWeight.w800)),
         const SizedBox(height: 12),
-        Text('Gregorian: ' + civilDateKey(chosen)),
+        Text('Gregorian: ${civilDateKey(chosen)}'),
         const SizedBox(height: 16),
         Card(child: Padding(padding: const EdgeInsets.all(20),
           child: Text(result?.label ?? 'Date unavailable',
@@ -308,7 +324,9 @@ class _HijriCalendarPageState extends State<HijriCalendarPage> {
           final date = await showDatePicker(context: context,
             initialDate: chosen, firstDate: DateTime(1900),
             lastDate: DateTime(2200));
-          if (date != null) setState(() => chosen = date);
+          if (date != null && mounted) {
+            setState(() => chosen = date);
+          }
         }, icon: const Icon(Icons.event), label: const Text('Choose date')),
         const SizedBox(height: 12),
         const Text('Local sighting adjustment (days):'),
@@ -345,7 +363,9 @@ class _ReminderSettingsPageState extends State<ReminderSettingsPage> {
     for (final prayer in salahNames) {
       values[prayer] = await repository.enabled(prayer);
     }
-    if (mounted) setState(() { wants = values; loading = false; });
+    if (mounted) {
+      setState(() { wants = values; loading = false; });
+    }
   }
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Prayer Reminders')),
@@ -366,10 +386,14 @@ class _ReminderSettingsPageState extends State<ReminderSettingsPage> {
             onChanged: (enabled) async {
               try {
                 await repository.save(prayer, enabled);
-                if (mounted) setState(() => wants[prayer] = enabled);
+                if (mounted) {
+                  setState(() => wants[prayer] = enabled);
+                }
               } catch (_) {
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Could not save preference.')));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not save preference.')));
+                }
               }
             },
           )),
@@ -394,7 +418,7 @@ class ContentLibraryGate extends StatelessWidget {
             color: _navy, fontSize: 23, fontWeight: FontWeight.w700),
             textAlign: TextAlign.center),
         const SizedBox(height: 14),
-        Text('This ' + type + ' library has no approved content yet. '
+        Text('This $type library has no approved content yet. '
           'It will remain empty until source references, usage rights, '
           'qualified religious review and integrity checks are complete.',
           textAlign: TextAlign.center),
@@ -421,11 +445,13 @@ class _LearningPlanPageState extends State<LearningPlanPage> {
   @override void initState() { super.initState(); _load(); }
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
-    if (mounted) setState(() {
-      completed = (p.getStringList('safwa_learning_progress') ?? [])
-          .where(topics.contains).toSet();
-      loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        completed = (p.getStringList('safwa_learning_progress') ?? [])
+            .where(topics.contains).toSet();
+        loading = false;
+      });
+    }
   }
   Future<void> _toggle(String topic) async {
     final result = {...completed};
@@ -468,11 +494,23 @@ class _LanguagePreferencesPageState extends State<LanguagePreferencesPage> {
   }
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
-    if (mounted) setState(() {
-      final candidate = p.getString('safwa_language');
-      if (<String>{'en','ha','ar'}.contains(candidate)) selected = candidate!;
-    });
+    if (mounted) {
+      setState(() {
+        final candidate = p.getString('safwa_language');
+        if (<String>{'en','ha','ar'}.contains(candidate)) {
+          selected = candidate!;
+        }
+      });
+    }
   }
+  Future<void> _changeLanguage(String? value) async {
+    if (value == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (await prefs.setString('safwa_language', value) && mounted) {
+      setState(() => selected = value);
+    }
+  }
+
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Languages')),
     body: ListView(padding: const EdgeInsets.all(20), children: [
@@ -483,19 +521,15 @@ class _LanguagePreferencesPageState extends State<LanguagePreferencesPage> {
       const Text('Preference is saved locally. Complete localization '
           'and independently checked religious translations '
           'are not yet available.'),
-      ...const <(String,String)>[
-        ('en','English'), ('ha','Hausa'), ('ar','العربية'),
-      ].map((entry) => RadioListTile<String>(
-        title: Text(entry.$2), value: entry.$1,
+      RadioGroup<String>(
         groupValue: selected,
-        onChanged: (value) async {
-          if (value == null) return;
-          final p = await SharedPreferences.getInstance();
-          if (await p.setString('safwa_language', value) && mounted) {
-            setState(() => selected = value);
-          }
-        },
-      )),
+        onChanged: _changeLanguage,
+        child: Column(children: const [
+          RadioListTile<String>(title: Text('English'), value: 'en'),
+          RadioListTile<String>(title: Text('Hausa'), value: 'ha'),
+          RadioListTile<String>(title: Text('العربية'), value: 'ar'),
+        ]),
+      ),
     ]),
   );
 }
@@ -523,12 +557,14 @@ class PrivacyPage extends StatelessWidget {
       final count = await clearSafwaLocalData();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Removed ' + count.toString() + ' local settings. '
+          content: Text('Removed $count local settings. '
             'Restart this screen to refresh its view.')));
       }
     } catch (_) {
-      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not delete all local data.')));
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not delete all local data.')));
+      }
     }
   }
 
