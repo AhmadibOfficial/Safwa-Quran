@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'quran_data.dart';
+import 'prayer_times.dart';
 void main(){WidgetsFlutterBinding.ensureInitialized();runApp(const SafwaApp());}
 const navy=Color(0xFF142547),cream=Color(0xFFF7F6F2),gold=Color(0xFFAD8744),teal=Color(0xFF187A8B);
 class SafwaApp extends StatelessWidget {
@@ -80,6 +81,23 @@ class _QuranHomeState extends State<QuranHome>{
           FilledButton.icon(onPressed:()=>setState(()=>tab=1),
             icon:const Icon(Icons.menu_book_outlined),label:const Text('Explore the Quran')),
         ]))),
+        const SizedBox(height:14),
+        Card(child:Padding(padding:const EdgeInsets.all(20),
+          child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            const Text('PRAYER TIMES',style:TextStyle(
+              color:gold,fontWeight:FontWeight.w700)),
+            const SizedBox(height:8),
+            const Text('Your daily Salah, thoughtfully planned.',
+              style:TextStyle(color:navy,fontSize:20,fontWeight:FontWeight.w700)),
+            const SizedBox(height:8),
+            const Text('Offline estimates · choose your city and method · no GPS required'),
+            const SizedBox(height:12),
+            OutlinedButton.icon(
+              onPressed:()=>Navigator.of(context).push(
+                MaterialPageRoute<void>(builder:(_)=>const PrayerTimesPage())),
+              icon:const Icon(Icons.access_time),
+              label:const Text('View prayer times')),
+          ]))),
         if(lastRead!=null)...[const SizedBox(height:15),Text('Continue from ${lastRead!}',
           style:const TextStyle(color:teal))],
         const SizedBox(height:20),

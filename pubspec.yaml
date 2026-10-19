@@ -3,12 +3,14 @@ description: Safwa Institute offline-first Quran application
 publish_to: none
 version: 0.3.0+3
 environment:
-  sdk: '>=3.5.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.5.3
   crypto: ^3.0.6
+  adhan_dart: ^2.0.1
+  timezone: ^0.11.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
