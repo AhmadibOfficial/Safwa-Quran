@@ -310,7 +310,7 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
                   alignment: Alignment.centerRight,
                   child: OutlinedButton.icon(
                     key: const Key('copy_week'),
-                    onPressed: () => _copy(selected, week),
+                    onPressed: () => _copy(selected, week!),
                     icon: const Icon(Icons.copy_outlined),
                     label: const Text('Copy 7 days'),
                   ),
