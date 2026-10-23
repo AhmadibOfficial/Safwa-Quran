@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-009-offline-weekly-prayer-planner",
+  "development_branch": "feature/safwa-010-private-salah-history",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -11,8 +11,8 @@
     },
     {
       "module": "weekly_prayer_planner",
-      "stage": "DRAFT_PENDING_KALI_VALIDATION",
-      "note": "offline 7-day local-city time estimates, sunrise marked reference-only, clipboard copy; no GPS, alerts, religious validation or emulator claim"
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "SAFWA-009 Kali: 11 Python and 26 Flutter tests pass, analyzer clear, weekly offline estimates; device validation and mosque benchmark pending"
     },
     {
       "module": "qibla",
@@ -23,6 +23,11 @@
       "module": "salah_tracker",
       "stage": "DRAFT_FUNCTIONAL_UNVERIFIED",
       "note": "optional local-only daily marks, no moral or religious judgement"
+    },
+    {
+      "module": "weekly_salah_history",
+      "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
+      "note": "7-day on-device private journal with user-only marked entries; no scoring, automatic inference, exports or server"
     },
     {
       "module": "tasbih",
