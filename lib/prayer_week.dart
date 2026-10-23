@@ -109,7 +109,9 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         final storedId = prefs.getString('safwa_prayer_city');
         cityId = prayerCities.any((city) => city.id == storedId)
@@ -157,7 +159,9 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
     final next = DateTime.utc(
       firstDay.year, firstDay.month, firstDay.day + (7 * weeks),
     );
-    if (next.year < 1900 || next.year > 2099) return;
+    if (next.year < 1900 || next.year > 2099) {
+      return;
+    }
     setState(() => firstDay = next);
   }
 
@@ -169,7 +173,9 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
       city: city, method: method, asr: asr, schedules: schedules,
     );
     await Clipboard.setData(ClipboardData(text: message));
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Estimated seven-day schedule copied.'),
     ));
@@ -244,7 +250,9 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
                   value: value, child: Text(value.label),
                 )).toList(),
                 onChanged: (value) {
-                  if (value == null) return;
+                  if (value == null) {
+                    return;
+                  }
                   setState(() => method = value);
                   _save();
                 },
@@ -261,7 +269,9 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
                   value: value, child: Text(value.label),
                 )).toList(),
                 onChanged: (value) {
-                  if (value == null) return;
+                  if (value == null) {
+                    return;
+                  }
                   setState(() => asr = value);
                   _save();
                 },
