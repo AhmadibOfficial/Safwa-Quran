@@ -48,6 +48,19 @@ No unsourced Quran, tafsir, Hadith or supplications are distributed.
 
 ## Validation — no emulator necessary
 
+A guarded source-only check is available:
+
+```bash
+bash scripts/verify_source_only.sh
+# Or, if Flutter/Dart packages are already cached:
+bash scripts/verify_source_only.sh --offline
+```
+
+It runs the Python Quran integrity unit tests and fail-closed release check,
+Flutter dependency resolution, static analysis, all Flutter unit/widget tests,
+and Git diff whitespace check. It **does not** start an emulator, invoke Gradle,
+compile an APK, reset Git or delete native/project files.
+
 The patch is created through the connected repository tooling. It has
 **not** been executed in a Flutter/Dart SDK by the assistant and is
 **not** a claim that new tests pass or an Android APK was rebuilt.
