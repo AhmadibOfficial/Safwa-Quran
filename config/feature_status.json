@@ -1,13 +1,18 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-006-companion-features",
+  "development_branch": "feature/safwa-009-offline-weekly-prayer-planner",
   "requires_kali_flutter_validation": true,
   "core": [
     {
       "module": "prayer_times",
       "stage": "DRAFT_FUNCTIONAL_UNVERIFIED",
       "note": "offline calculations, manual city & methods; real timetable comparison still needed"
+    },
+    {
+      "module": "weekly_prayer_planner",
+      "stage": "DRAFT_PENDING_KALI_VALIDATION",
+      "note": "offline 7-day local-city time estimates, sunrise marked reference-only, clipboard copy; no GPS, alerts, religious validation or emulator claim"
     },
     {
       "module": "qibla",

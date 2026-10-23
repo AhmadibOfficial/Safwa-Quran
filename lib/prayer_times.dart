@@ -83,7 +83,8 @@ class PrayerTimeService {
 
   PrayerSchedule forInstant(
       PrayerCity city, DateTime instant, PrayerMethod method, AsrRule asr) {
-    if (city.latitude.abs() > 90 || city.longitude.abs() > 180) {
+    if (!city.latitude.isFinite || !city.longitude.isFinite ||
+        city.latitude.abs() > 90 || city.longitude.abs() > 180) {
       throw const FormatException('Invalid prayer city coordinates');
     }
     final zone = _location(city);

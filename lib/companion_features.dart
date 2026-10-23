@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'companion_core.dart';
 import 'prayer_times.dart';
+import 'prayer_week.dart';
 
 const _navy = Color(0xFF142547);
 const _gold = Color(0xFFAD8744);
@@ -20,6 +21,9 @@ class CompanionHub extends StatelessWidget {
     final sections = <({String title, String detail, IconData icon, Widget page})>[
       (title: 'Prayer Times', detail: 'Offline times and next Salah',
        icon: Icons.access_time, page: const PrayerTimesPage()),
+      (title: '7-Day Prayer Planner',
+       detail: 'Offline weekly Salah estimates and a copyable schedule',
+       icon: Icons.date_range_outlined, page: const PrayerWeekPage()),
       (title: 'Qibla Direction', detail: 'True-north bearing from a chosen city',
        icon: Icons.explore_outlined, page: const QiblaPage()),
       (title: 'Prayer Reminders', detail: 'Save reminder preferences — alerts not yet scheduled',
