@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-015-transactional-sqlite-foundation",
+  "development_branch": "feature/safwa-015b-preference-gateway",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -93,6 +93,11 @@
       "module": "sqlite_transactional_foundation",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
       "note": "SAFWA-015 isolated file-backed SQLite adapter + 9 FFI and 5 copy-only migration rehearsal tests committed. NOT executed on Kali; new code unverified. Legacy SharedPreferences all still live. Automated migration rehearsal checks allowlisted hashes and source stability but does not cut over or delete data. Full consumer migration, physical-device crash tests and independent reviews pending."
+    },
+    {
+      "module": "preference_gateway",
+      "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
+      "note": "SAFWA-015B: all listed direct application and backup preference consumers use shared SafwaPreferences facade; getInstance always SharedPreferences, SQLite allowed only as explicit isolated verification session. 5 new unexecuted tests. Canonical durable cutover, physical crash recovery and independent reviews remain BLOCKED."
     }
   ],
   "quran_reader_activation": "BLOCKED",

@@ -1,4 +1,4 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'safwa_preferences.dart';
 
 /// Names and descriptions of the existing offline-first Safwa tools.
 /// This directory never changes Quran source approval or unlocks content.
@@ -70,7 +70,7 @@ class LocalCompanionPins {
   static const storageKey = 'safwa_companion_pins';
 
   Future<Set<String>> read() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     return (prefs.getStringList(storageKey) ?? const <String>[])
         .where(companionIds.contains).toSet();
   }
@@ -79,7 +79,7 @@ class LocalCompanionPins {
     if (!companionIds.contains(id)) {
       throw const FormatException('Unknown Safwa companion item');
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     final updated = await read();
     if (!updated.add(id)) updated.remove(id);
     final ordered = companionItems

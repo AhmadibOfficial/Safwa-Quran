@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'safwa_preferences.dart';
 import 'quran_data.dart';
 import 'prayer_times.dart';
 import 'companion_features.dart';
@@ -59,7 +59,7 @@ class _QuranHomeState extends State<QuranHome>{
     _load();
   }
   Future<void> _load()async{
-    final p=await SharedPreferences.getInstance();
+    final p=await SafwaPreferences.getInstance();
     if (mounted) {
       setState(() {
       saved=(p.getStringList('saved_surahs')??[]).map(int.tryParse).whereType<int>().toSet();
@@ -70,7 +70,7 @@ class _QuranHomeState extends State<QuranHome>{
   Future<void> _save(int id)async{
     final next={...saved};
     next.contains(id)?next.remove(id):next.add(id);
-    final p=await SharedPreferences.getInstance();
+    final p=await SafwaPreferences.getInstance();
     if (await p.setStringList('saved_surahs',next.map((e)=>e.toString()).toList()) && mounted) {
       setState(() => saved = next);
     }
@@ -170,7 +170,7 @@ class _SurahReaderState extends State<SurahReader>{
   double fontSize=30;Set<String> savedAyat={};
   @override void initState(){super.initState();_load();}
   Future<void> _load()async{
-    final p=await SharedPreferences.getInstance();
+    final p=await SafwaPreferences.getInstance();
     if (mounted) {
       setState(() {
       fontSize=p.getDouble('arabic_font_size')??30;
@@ -182,20 +182,20 @@ class _SurahReaderState extends State<SurahReader>{
     final id='${widget.surah.number}:$verse';
     final next={...savedAyat};
     next.contains(id)?next.remove(id):next.add(id);
-    final p=await SharedPreferences.getInstance();
+    final p=await SafwaPreferences.getInstance();
     if (await p.setStringList('saved_ayat',next.toList()) && mounted) {
       setState(() => savedAyat = next);
     }
   }
   Future<void> _resize(double delta)async{
     final size=(fontSize+delta).clamp(20.0,48.0);
-    final p=await SharedPreferences.getInstance();
+    final p=await SafwaPreferences.getInstance();
     if (await p.setDouble('arabic_font_size',size) && mounted) {
       setState(() => fontSize = size);
     }
   }
   Future<void> _progress(int verse)async{
-    final p=await SharedPreferences.getInstance();
+    final p=await SafwaPreferences.getInstance();
     await p.setString('last_read','${widget.surah.number}:$verse');
   }
   @override Widget build(BuildContext context)=>Scaffold(

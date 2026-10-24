@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'safwa_preferences.dart';
 
 /// Great-circle bearing clockwise from true north. Not a live magnetometer.
 double qiblaBearing(double latitude, double longitude) {
@@ -34,7 +34,7 @@ class LocalSalahJournal {
   String _key(DateTime date) => 'safwa_salah_${civilDateKey(date)}';
 
   Future<Set<String>> read(DateTime date) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     return (prefs.getStringList(_key(date)) ?? <String>[])
         .where(salahNames.contains).toSet();
   }
@@ -43,7 +43,7 @@ class LocalSalahJournal {
     if (!salahNames.contains(prayer)) {
       throw const FormatException('Unknown prayer name');
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     final entries = await read(date);
     if (!entries.add(prayer)) entries.remove(prayer);
     final ordered = salahNames.where(entries.contains).toList();
@@ -54,7 +54,7 @@ class LocalSalahJournal {
   }
 
   Future<void> clearDay(DateTime date) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     if (!await prefs.remove(_key(date))) {
       throw StateError('Could not clear the journal');
     }
@@ -67,12 +67,12 @@ class LocalTasbih {
   static const targetKey = 'safwa_tasbih_goal';
 
   Future<int> count() async =>
-      (await SharedPreferences.getInstance()).getInt(countKey) ?? 0;
+      (await SafwaPreferences.getInstance()).getInt(countKey) ?? 0;
   Future<int> goal() async =>
-      (await SharedPreferences.getInstance()).getInt(targetKey) ?? 33;
+      (await SafwaPreferences.getInstance()).getInt(targetKey) ?? 33;
 
   Future<int> increment() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     final old = prefs.getInt(countKey) ?? 0;
     if (old < 0 || old >= 999999) {
       throw StateError('Counter at maximum; reset to continue.');
@@ -87,14 +87,14 @@ class LocalTasbih {
     if (goal <= 0 || goal > 1000000) {
       throw const FormatException('Goal outside supported range');
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     if (!await prefs.setInt(targetKey, goal)) {
       throw StateError('Could not save goal');
     }
   }
 
   Future<void> reset() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     if (!await prefs.setInt(countKey, 0)) {
       throw StateError('Could not reset counter');
     }
@@ -156,14 +156,14 @@ class PrayerReminderPreferences {
 
   Future<bool> enabled(String prayer) async {
     if (!salahNames.contains(prayer)) return false;
-    return (await SharedPreferences.getInstance()).getBool(key(prayer)) ?? false;
+    return (await SafwaPreferences.getInstance()).getBool(key(prayer)) ?? false;
   }
 
   Future<void> save(String prayer, bool enabled) async {
     if (!salahNames.contains(prayer)) {
       throw const FormatException('Invalid prayer name');
     }
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     if (!await prefs.setBool(key(prayer), enabled)) {
       throw StateError('Could not save reminder preference');
     }
@@ -172,7 +172,7 @@ class PrayerReminderPreferences {
 
 /// Deletes Safwa-owned local preferences; does not touch unrelated apps.
 Future<int> clearSafwaLocalData() async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await SafwaPreferences.getInstance();
   final keys = prefs.getKeys().where((key) =>
       key.startsWith('safwa_') ||
       <String>{'saved_surahs','saved_ayat','last_read','arabic_font_size'}
