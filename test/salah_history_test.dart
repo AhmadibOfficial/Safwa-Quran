@@ -112,21 +112,28 @@ void main() {
       (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SalahHistoryPage()));
     await tester.pumpAndSettle();
+    // Use the first day of the displayed week. It is initially visible
+    // within Flutter's default 800x600 test viewport; a later weekday's
+    // ExpansionTile can be partly below the viewport after a drag.
     final now = DateTime.now();
-    final todayKey = civilDateKey(now);
-    final dayTile = find.byKey(ValueKey('history_day_$todayKey'));
-    await tester.scrollUntilVisible(
-      dayTile, 160, scrollable: find.byType(Scrollable).first,
+    final monday = DateTime(
+      now.year, now.month, now.day - (now.weekday - DateTime.monday),
     );
-    await tester.tap(dayTile);
+    final mondayKey = civilDateKey(monday);
+    final title = find.text('Monday · $mondayKey');
+    await tester.ensureVisible(title);
+    await tester.pumpAndSettle();
+    await tester.tap(title);
     await tester.pumpAndSettle();
 
-    final checkbox = find.byKey(ValueKey('history_${todayKey}_Fajr'));
+    final checkbox = find.byKey(ValueKey('history_${mondayKey}_Fajr'));
+    expect(checkbox, findsOneWidget);
     await tester.ensureVisible(checkbox);
+    await tester.pumpAndSettle();
     await tester.tap(checkbox);
     await tester.pumpAndSettle();
 
-    expect(await const LocalSalahJournal().read(now), contains('Fajr'));
+    expect(await const LocalSalahJournal().read(monday), contains('Fajr'));
     expect(find.text('1 personal entry recorded this week'), findsOneWidget);
   });
 
