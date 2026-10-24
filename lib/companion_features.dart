@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'safwa_preferences.dart';
 
 import 'companion_core.dart';
 import 'companion_directory.dart';
@@ -194,7 +194,7 @@ class _QiblaPageState extends State<QiblaPage> {
   bool loading = true;
   @override void initState() { super.initState(); _load(); }
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     if (!mounted) return;
     final id = prefs.getString('safwa_prayer_city');
     setState(() {
@@ -232,7 +232,7 @@ class _QiblaPageState extends State<QiblaPage> {
               value: c.id, child: Text(c.name))).toList(),
             onChanged: (v) async {
               setState(() => selectedCity = v);
-              final prefs = await SharedPreferences.getInstance();
+              final prefs = await SafwaPreferences.getInstance();
               if (v != null) await prefs.setString('safwa_prayer_city', v);
             },
           ),
@@ -558,7 +558,7 @@ class _LearningPlanPageState extends State<LearningPlanPage> {
   bool loading = true;
   @override void initState() { super.initState(); _load(); }
   Future<void> _load() async {
-    final p = await SharedPreferences.getInstance();
+    final p = await SafwaPreferences.getInstance();
     if (mounted) {
       setState(() {
         completed = (p.getStringList('safwa_learning_progress') ?? [])
@@ -570,7 +570,7 @@ class _LearningPlanPageState extends State<LearningPlanPage> {
   Future<void> _toggle(String topic) async {
     final result = {...completed};
     if (!result.add(topic)) result.remove(topic);
-    final p = await SharedPreferences.getInstance();
+    final p = await SafwaPreferences.getInstance();
     if (await p.setStringList('safwa_learning_progress',
         topics.where(result.contains).toList()) && mounted) {
       setState(() => completed = result);
@@ -607,7 +607,7 @@ class _LanguagePreferencesPageState extends State<LanguagePreferencesPage> {
     _load();
   }
   Future<void> _load() async {
-    final p = await SharedPreferences.getInstance();
+    final p = await SafwaPreferences.getInstance();
     if (mounted) {
       setState(() {
         final candidate = p.getString('safwa_language');
@@ -619,7 +619,7 @@ class _LanguagePreferencesPageState extends State<LanguagePreferencesPage> {
   }
   Future<void> _changeLanguage(String? value) async {
     if (value == null) return;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     if (await prefs.setString('safwa_language', value) && mounted) {
       setState(() => selected = value);
     }
