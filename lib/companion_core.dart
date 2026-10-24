@@ -173,6 +173,11 @@ class PrayerReminderPreferences {
 /// Deletes Safwa-owned local preferences; does not touch unrelated apps.
 Future<int> clearSafwaLocalData() async {
   final prefs = await SafwaPreferences.getInstance();
+  if (prefs.isSqliteCanonical) {
+    // One SQLite transaction, not multiple per-key operations. Legacy
+    // source data is NOT erased as a side-effect of SQL privacy deletion.
+    return prefs.clearCanonicalData();
+  }
   final keys = prefs.getKeys().where((key) =>
       key.startsWith('safwa_') ||
       <String>{'saved_surahs','saved_ayat','last_read','arabic_font_size'}
