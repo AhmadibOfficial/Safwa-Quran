@@ -25,10 +25,10 @@ SQLite WAL + synchronous FULL may provide stronger durability, but **Dart fault 
 
 ## Test suite — defined, not run
 
-`test/safwa_cutover_test.dart` (11 cases):
+`test/safwa_cutover_test.dart` (14 cases):
 1. Legacy remains canonical before activation.
 2. Snapshot and marker commit together; a session obtained earlier reads/writes the new store.
-3. A thrown failure after snapshot update rolls back and leaves legacy canonical.
+3. Failures after the snapshot and after the activation marker but before COMMIT roll back both rows and leave legacy canonical.
 4. A thrown failure after SQL commit locks the session; new runtime chooses SQL, not changed legacy.
 5. Barrier prevents new reads and writes while staging waits.
 6. Rebooting test controller after a successful migration reads SQL-only values.
@@ -37,8 +37,11 @@ SQLite WAL + synchronous FULL may provide stronger durability, but **Dart fault 
 9. Missing explicit consent blocks migration.
 10. Unresolved legacy undo journal blocks migration, persists unchanged.
 11. After activation, an old legacy undo journal is not replayed into SQL.
+12. Legacy session obtained before review-port installation dynamically follows the activated SQLite source.
+13. Existing SQLite schema-v1 snapshot upgrades to schema-v2 without deletion.
+14. Activation-marker write failure before commit never persists a partial cutover.
 
-Expect **102 Flutter tests** if this branch only adds the 11 new tests to 91 inherited passing SAFWA-015B tests, plus the 11 Python integrity checks. **This is an expected count, not a test result.**
+Expect **105 Flutter tests** if this branch only adds the 14 new tests to 91 inherited passing SAFWA-015B tests, plus the 11 Python integrity checks. **This is an expected count, not a test result.**
 
 Tests use only uniquely generated disposable filesystem SQLite DBs and mock SharedPreferences, not private data or native apps.
 
@@ -77,7 +80,7 @@ If Flutter tests, SQL upgrade, FFI or package resolution fail, keep the log and 
 
 ## External acceptance — remains blocked
 
-1. **Isolated test pass:** exact commit SHA Kali analyzer, 102 Flutter tests, 11 Python checks, policy lock and worktree state verified.
+1. **Isolated test pass:** exact commit SHA Kali analyzer, 105 Flutter tests, 11 Python checks, policy lock and worktree state verified.
 2. **Full production bootstrap:** after formal approval, startup must establish a single canonical runtime before any widgets, plugins or background isolates can access Safwa state. No cold-start legacy fallback if an activated SQL DB is absent or corrupt. Cross-isolate synchronization or fail-closed isolation is mandatory.
 3. **Concurrency:** enforce all writers (including pre-existing handles, imported restore, journal updates, read-modify-write counters, deletion), and prevent direct SharedPreferences writes. Add process, isolate, OS restart and app-version concurrency tests. A mere in-process frozen flag is not enough.
 4. **Migration:** keep original legacy data encrypted or isolated appropriately until confirmed recovery; verify full equality and policy-safe erasure of legacy after the approved retention period. No permanent plaintext shadows and no loss of keys outside the allowlist.
