@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-014-restore-recovery-security",
+  "development_branch": "feature/safwa-015-transactional-sqlite-foundation",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -86,8 +86,13 @@
     },
     {
       "module": "restore_recovery_hardening",
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "Owner verified SAFWA-014 on Kali on 2026-10-24: 72 Flutter tests (including 13 fault/adversarial tests), 11 Python integrity checks, flutter analyze clean, source-only gate PASS. Still not power-loss safe or independently approved."
+    },
+    {
+      "module": "sqlite_transactional_foundation",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-014 adds SharedPreferences undo journal, startup fail-closed replay, per-Surah ayah bounds and fault/adversarial tests. NOT transactional or power-loss-certified; independent AppSec and privacy/accessibility reviews pending."
+      "note": "SAFWA-015 isolated file-backed SQLite snapshot adapter and 9 new FFI tests; requires online package resolution and Kali execution. NOT live-wired: all active SharedPreferences consumers and SAFWA-014 recovery remain unchanged. Full cross-consumer migration, hardware process-kill/low-storage tests and independent reviewers pending."
     }
   ],
   "quran_reader_activation": "BLOCKED",
