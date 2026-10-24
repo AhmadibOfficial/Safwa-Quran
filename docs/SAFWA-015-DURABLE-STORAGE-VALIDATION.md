@@ -26,6 +26,57 @@ SAFWA-015 adds `lib/safwa_sqlite_store.dart`, a **separate, opt-in, file-backed 
 - `close()`: closes the FFI/mobile-backed database.
 - Legacy `LocalSafwaBackup.encodeValidatedSnapshot` and immutable `SafwaBackupPreview.validatedValues` let both backends share the existing strict schema and allowlist.
 
+## Additional migration rehearsal (pre-cutover, source-only)
+
+A new `lib/safwa_migration_rehearsal.dart` module is available to rehearse
+legacy preference migration against a **new, disposable SQLite file** while
+the application continues using its original SharedPreferences backend.
+It requires explicit consent, refuses an unresolved SAFWA-014 recovery journal,
+stages only the allowlisted backup, verifies the canonical snapshot SHA-256
+and key count, then re-reads legacy preferences to detect changes during the
+copy. It does **not** flip any app switch, delete the old store, expose Salah
+values in diagnostics or certify that all concurrent writes are frozen.
+
+Five additional file-backed tests in
+`test/safwa_migration_rehearsal_test.dart` cover preservation, no-consent
+rejection, a concurrent legacy write, a pending recovery journal and refusal
+to replace a nonempty destination. **These tests are written but NOT executed
+on Kali or devices yet.** The stage remains a rehearsal, not a migration.
+
+After first-time online `flutter pub get` inside the isolated worktree:
+
+```bash
+flutter analyze
+flutter test --reporter expanded \
+  test/safwa_sqlite_store_test.dart \
+  test/safwa_migration_rehearsal_test.dart
+bash scripts/verify_source_only.sh --offline
+```
+
+Expected new cases: 9 transactional SQLite + 5 migration rehearsals, in
+addition to 72 previously passing SAFWA-014 Flutter tests. **86 is an
+expected count, NOT a reported result.** The 11 Quran integrity checks and
+fail-closed public-release policy must still pass separately.
+
+### Direct legacy preference consumers that still block canonical cutover
+
+- `lib/main.dart`: home bookmarks, last-read, saved ayat, font preferences;
+  startup recovery remains attached to SharedPreferences.
+- `lib/prayer_times.dart`, `lib/prayer_week.dart`: city/method/Asr settings.
+- `lib/companion_core.dart`: Salah journal, Tasbih and reminder flags,
+  including data deletion.
+- `lib/companion_features.dart`: Qibla city, study progress, language.
+- `lib/companion_directory.dart`: pinned Companion tool shortcuts.
+- `lib/local_backup.dart`: export, undo journal, restored preferences.
+- `lib/encrypted_backup.dart` and secure backup UI rely on that same
+  legacy restoration service indirectly.
+
+Full D7 completion requires **every** reader and writer to use an injected
+common storage interface with a single commit boundary, audited privacy
+erasure, migration versioning and a one-time cutover after the old values
+have been durably archived and compared. Do not mix canonical SQL writes
+with any remaining legacy widget reads.
+
 ## Design acceptance gates
 
 | Gate | Evidence required | Status |
@@ -35,7 +86,7 @@ SAFWA-015 adds `lib/safwa_sqlite_store.dart`, a **separate, opt-in, file-backed 
 | D3 | Failed transaction rolls back completely; state persists after close/reopen | Tests defined, not run |
 | D4 | Successful restore replaces exactly the allowlisted state | Test defined, not run |
 | D5 | Encryption, unknown keys, forbidden verse references, no consent | Tests defined, not run |
-| D6 | Copy-only legacy staging, no loss of user SharedPreferences values | Test defined, not run |
+| D6 | Copy-only staging, source/destination digest, concurrent change refusal and source preservation | 14 SQLite/rehearsal tests defined, not run |
 | D7 | **Migrate ALL live preference consumers to canonical SQLite reads/writes** with old-store archive/recovery and no split-brain; repeatable migration/version upgrades | Not implemented; blocks live switch |
 | D8 | **Real process termination/relaunch on Android AND iOS** with before/after snapshots for all commit boundaries | Not run; requires approved device setup |
 | D9 | Real or controlled low-storage, disk-full, OS kill/restart, app-version upgrade, and corrupted DB handling | Not run; requires approved device setup |
