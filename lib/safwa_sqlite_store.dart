@@ -24,7 +24,24 @@ class SafwaSqliteStore {
   final String path;
   Database? _db;
 
-  static const schemaVersion = 1;
+  // Schema v2 adds a durable single-row activation marker. The marker and
+  // snapshot are updated in ONE SQLite transaction.
+  static const schemaVersion = 2;
+
+  static Future<void> _createActivationTable(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE safwa_activation (
+        id INTEGER NOT NULL PRIMARY KEY CHECK(id = 1),
+        state TEXT NOT NULL CHECK(state IN ('legacy', 'sqlite')),
+        source_sha TEXT
+      )
+    ''');
+    await db.insert('safwa_activation', {
+      'id': 1,
+      'state': 'legacy',
+      'source_sha': null,
+    });
+  }
   static const databaseFileName = 'safwa-private-preferences.db';
 
   /// For eventual mobile integration only. Not called by Safwa main().
@@ -74,6 +91,13 @@ class SafwaSqliteStore {
               <String, Object>{},
             ),
           });
+          await _createActivationTable(database);
+        },
+        onUpgrade: (database, oldVersion, newVersion) async {
+          if (oldVersion != 1 || newVersion != schemaVersion) {
+            throw StateError('Unsupported Safwa SQLite schema migration');
+          }
+          await _createActivationTable(database);
         },
       ),
     );
@@ -90,6 +114,7 @@ class SafwaSqliteStore {
       }
       // Every open verifies the stored allowlist and SHA-256 checksum.
       const LocalSafwaBackup().inspect(await _readArchive(db));
+      await _readActivation(db);
       _db = db;
     } catch (_) {
       await db.close();
@@ -109,6 +134,79 @@ class SafwaSqliteStore {
       throw StateError('SAFWA-015 preference snapshot missing or corrupt');
     }
     return rows.single['archive']! as String;
+  }
+
+  /// Throws on invalid, missing, or unknown activation metadata; never
+  /// silently assumes legacy when a marker is malformed.
+  static Future<({bool active, String? sourceSha})> _readActivation(
+    DatabaseExecutor executor,
+  ) async {
+    final records = await executor.query(
+      'safwa_activation',
+      columns: ['state', 'source_sha'],
+      where: 'id = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+    if (records.length != 1) {
+      throw StateError('Missing Safwa cutover activation record');
+    }
+    final state = records.single['state'];
+    final hash = records.single['source_sha'];
+    if (state == 'legacy' && hash == null) {
+      return (active: false, sourceSha: null);
+    }
+    if (state == 'sqlite' && hash is String &&
+        RegExp(r'^[0-9a-f]{64}$').hasMatch(hash)) {
+      return (active: true, sourceSha: hash);
+    }
+    throw StateError('Invalid Safwa cutover activation record');
+  }
+
+  Future<({bool active, String? sourceSha})> readActivation() =>
+      _readActivation(_opened);
+
+  /// Review-only activation. Source snapshot and activation metadata commit
+  /// together, so failures within the transaction roll back both records.
+  /// Never called by app startup or production widgets.
+  Future<void> activateValidatedLegacy(
+    String sourceBackup, {
+    required bool confirmed,
+    Future<void> Function(String step)? checkpoint,
+  }) async {
+    if (!confirmed) {
+      throw StateError('Explicit cutover consent required');
+    }
+    final checked = const LocalSafwaBackup().inspect(sourceBackup);
+    final canonical = LocalSafwaBackup.encodeValidatedSnapshot(
+      checked.validatedValues,
+    );
+    await _opened.transaction((txn) async {
+      final state = await _readActivation(txn);
+      if (state.active) {
+        throw StateError('SQLite backend already activated');
+      }
+      final prior = const LocalSafwaBackup()
+          .inspect(await _readArchive(txn));
+      if (prior.keyCount != 0 && prior.sha256 != checked.sha256) {
+        throw StateError('SQLite destination contains divergent data');
+      }
+
+      if (checkpoint != null) await checkpoint('before-snapshot');
+      await _writeArchive(txn, canonical);
+      if (checkpoint != null) await checkpoint('after-snapshot');
+
+      final changed = await txn.update(
+        'safwa_activation',
+        {'state': 'sqlite', 'source_sha': checked.sha256},
+        where: 'id = ? AND state = ?',
+        whereArgs: [1, 'legacy'],
+      );
+      if (changed != 1) {
+        throw StateError('Unable to commit Safwa cutover marker');
+      }
+      if (checkpoint != null) await checkpoint('after-marker');
+    });
   }
 
   /// Returns a validated snapshot. It never includes reader-release policy,
