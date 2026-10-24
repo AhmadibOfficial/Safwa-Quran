@@ -43,8 +43,14 @@ class SafwaPreferences {
 
   // Indirection also covers preference objects acquired before the review
   // runtime was installed. Explicit SQLite verification sessions are separate.
-  SafwaCutoverPort? get _port =>
-      _sqlite == null ? _isolatedReviewPort : null;
+  SafwaCutoverPort? get _port {
+    if (_sqlite != null) return null;
+    final port = _isolatedReviewPort;
+    if (port == null && _legacy == null) {
+      throw StateError('Detached Safwa review session');
+    }
+    return port;
+  }
 
   bool get isSqliteCanonical =>
       _port?.sqliteCanonical ?? (_sqlite != null);
@@ -69,6 +75,11 @@ class SafwaPreferences {
       : _sqlite = null,
         _snapshot = null;
 
+  SafwaPreferences._reviewOnly()
+      : _legacy = null,
+        _sqlite = null,
+        _snapshot = null;
+
   SafwaPreferences._sqlite(this._sqlite, Map<String, Object> values)
       : _legacy = null,
         _snapshot = Map<String, Object>.from(values);
@@ -78,8 +89,15 @@ class SafwaPreferences {
   final Map<String, Object>? _snapshot;
 
   /// Existing behaviour remains intact for all application screens.
-  static Future<SafwaPreferences> getInstance() async =>
-      SafwaPreferences._legacy(await SharedPreferences.getInstance());
+  static Future<SafwaPreferences> getInstance() async {
+    // After a review controller is installed, new sessions must not even
+    // retrieve a legacy SharedPreferences instance. Before that point the
+    // production behaviour remains exactly the historical one.
+    if (_isolatedReviewPort != null) {
+      return SafwaPreferences._reviewOnly();
+    }
+    return SafwaPreferences._legacy(await SharedPreferences.getInstance());
+  }
 
   /// An explicit, isolated factory for widget/unit verification only.
   /// Callers must supply a previously opened, disposable SQLite instance.
