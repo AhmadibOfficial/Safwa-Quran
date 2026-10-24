@@ -28,6 +28,7 @@ jobs:
             exit 1
           fi
   flutter-application:
+    # Source-only until explicit platform-build and release authorization.
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -36,8 +37,6 @@ jobs:
         with:
           channel: stable
           cache: true
-      - run: flutter create --project-name safwa_quran --org org.safwa.institute --platforms android,ios .
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build apk --debug
