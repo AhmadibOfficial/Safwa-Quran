@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-011-local-backup-restore",
+  "development_branch": "feature/safwa-012-encrypted-backup-accessibility",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -71,8 +71,13 @@
     },
     {
       "module": "local_backup_restore",
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "SAFWA-011 Kali: 11 Python checks, 44 Flutter tests, analyzer and offline source-only gate PASS; plaintext clipboard backup is legacy, not safe for production"
+    },
+    {
+      "module": "encrypted_backup_accessibility",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "explicit clipboard export with privacy warning; SHA256 checksum and schema guard, allowlisted restore with confirmation and best-effort rollback; plaintext, no authentication or file-picker integration"
+      "note": "primary UI routes to passphrase-based Argon2id AES-256-GCM encrypted JSON with authenticating tag, accessible form/announcements; new cryptography dependency needs online pub get + Kali tests"
     }
   ],
   "quran_reader_activation": "BLOCKED",
