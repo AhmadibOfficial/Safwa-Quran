@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'safwa_preferences.dart';
 
 import 'companion_core.dart';
 import 'companion_directory.dart';
@@ -44,7 +44,7 @@ class LocalSafwaBackup {
   final RestoreCheckpoint? restoreCheckpoint;
 
   /// Reserved, non-exportable on-device undo journal. Contains plaintext
-  /// preference snapshots, just like the existing SharedPreferences store.
+  /// preference snapshots, just like the existing SafwaPreferences store.
   static const recoveryKey = 'safwa_restore_recovery_v1';
   static bool _restoreBusy = false;
 
@@ -234,7 +234,7 @@ class LocalSafwaBackup {
   }
 
   static Future<Map<String, Object>> _snapshot(
-      SharedPreferences prefs) async {
+      SafwaPreferences prefs) async {
     final values = <String, Object>{};
     for (final key in prefs.getKeys()) {
       if (!_allowedKey(key)) continue;
@@ -247,7 +247,7 @@ class LocalSafwaBackup {
   }
 
   Future<String> createBackupJson() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await SafwaPreferences.getInstance();
     _refusePending(prefs);
     final values = await _snapshot(prefs);
     return _encodeBackup(values);
@@ -296,16 +296,16 @@ class LocalSafwaBackup {
 
   /// Export is forbidden while a restore transaction might be incomplete.
   /// Initialization should call recoverPendingRestore before entering the app.
-  static void _refusePending(SharedPreferences prefs) {
+  static void _refusePending(SafwaPreferences prefs) {
     if (_restoreBusy || prefs.containsKey(recoveryKey)) {
       throw StateError('Safwa restore recovery must complete first');
     }
   }
 
   /// Recover the complete pre-restore snapshot from an on-device undo journal.
-  /// Repeated calls are idempotent when all SharedPreferences calls succeed.
+  /// Repeated calls are idempotent when all SafwaPreferences calls succeed.
   /// A corrupt journal is left intact and fails closed: no destructive reset.
-  static Future<bool> _recover(SharedPreferences prefs) async {
+  static Future<bool> _recover(SafwaPreferences prefs) async {
     if (!prefs.containsKey(recoveryKey)) return false;
     final journal = prefs.getString(recoveryKey);
     if (journal == null) {
@@ -321,21 +321,21 @@ class LocalSafwaBackup {
 
   /// Call on every app launch, before starting widgets that read local data.
   /// This is best-effort WAL-like recovery, not an atomic transaction or a
-  /// guarantee against sudden power loss on the SharedPreferences backend.
+  /// guarantee against sudden power loss on the SafwaPreferences backend.
   Future<bool> recoverPendingRestore() async {
     if (_restoreBusy) {
       throw StateError('Safwa restore already running');
     }
     _restoreBusy = true;
     try {
-      return await _recover(await SharedPreferences.getInstance());
+      return await _recover(await SafwaPreferences.getInstance());
     } finally {
       _restoreBusy = false;
     }
   }
 
   static Future<void> _replace(
-    SharedPreferences prefs,
+    SafwaPreferences prefs,
     Map<String, Object> values, {
     RestoreCheckpoint? checkpoint,
   }) async {
@@ -376,7 +376,7 @@ class LocalSafwaBackup {
   /// changes. If an interrupted process later restarts, initialization
   /// attempts to restore the old snapshot and leaves the journal on failure.
   ///
-  /// SharedPreferences has no cross-key atomicity or fsync guarantee.
+  /// SafwaPreferences has no cross-key atomicity or fsync guarantee.
   /// This only improves best-effort recovery; production restore stays gated.
   Future<int> restoreBackup(
     String jsonText, {
@@ -390,7 +390,7 @@ class LocalSafwaBackup {
     }
     _restoreBusy = true;
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SafwaPreferences.getInstance();
       await _recover(prefs);
       final incoming = inspect(jsonText);
       final previous = await _snapshot(prefs);
