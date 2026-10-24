@@ -25,8 +25,28 @@ class SafwaBackupPreview {
       (_values['saved_ayat'] as List<String>?)?.length ?? 0;
 }
 
+/// A deterministic test seam for simulating failures after individual writes.
+/// This cannot simulate actual flash-storage durability or loss of power.
+typedef RestoreCheckpoint = Future<void> Function(String step);
+
+/// Only fault-injection tests should throw this to simulate process death.
+/// A real process death bypasses Dart exception handlers entirely.
+class SimulatedRestoreInterruption extends Error {}
+
 class LocalSafwaBackup {
-  const LocalSafwaBackup();
+  const LocalSafwaBackup({this.restoreCheckpoint});
+
+  final RestoreCheckpoint? restoreCheckpoint;
+
+  /// Reserved, non-exportable on-device undo journal. Contains plaintext
+  /// preference snapshots, just like the existing SharedPreferences store.
+  static const recoveryKey = 'safwa_restore_recovery_v1';
+  static bool _restoreBusy = false;
+
+  Future<void> _checkpoint(String step) async {
+    final checkpoint = restoreCheckpoint;
+    if (checkpoint != null) await checkpoint(step);
+  }
 
   static const int schema = 1;
   static const int maximumCharacters = 1000000;
@@ -207,7 +227,12 @@ class LocalSafwaBackup {
 
   Future<String> createBackupJson() async {
     final prefs = await SharedPreferences.getInstance();
+    _refusePending(prefs);
     final values = await _snapshot(prefs);
+    return _encodeBackup(values);
+  }
+
+  static String _encodeBackup(Map<String, Object> values) {
     final body = {
       'format': format,
       'schema': schema,
@@ -242,14 +267,58 @@ class LocalSafwaBackup {
     return SafwaBackupPreview._(values, checksum);
   }
 
+  /// Export is forbidden while a restore transaction might be incomplete.
+  /// Initialization should call recoverPendingRestore before entering the app.
+  static void _refusePending(SharedPreferences prefs) {
+    if (_restoreBusy || prefs.containsKey(recoveryKey)) {
+      throw StateError('Safwa restore recovery must complete first');
+    }
+  }
+
+  /// Recover the complete pre-restore snapshot from an on-device undo journal.
+  /// Repeated calls are idempotent when all SharedPreferences calls succeed.
+  /// A corrupt journal is left intact and fails closed: no destructive reset.
+  static Future<bool> _recover(SharedPreferences prefs) async {
+    if (!prefs.containsKey(recoveryKey)) return false;
+    final journal = prefs.getString(recoveryKey);
+    if (journal == null) {
+      throw StateError('Safwa recovery journal has an unexpected type');
+    }
+    final original = const LocalSafwaBackup().inspect(journal);
+    await _replace(prefs, original._values);
+    if (!await prefs.remove(recoveryKey)) {
+      throw StateError('Could not finish Safwa restore recovery');
+    }
+    return true;
+  }
+
+  /// Call on every app launch, before starting widgets that read local data.
+  /// This is best-effort WAL-like recovery, not an atomic transaction or a
+  /// guarantee against sudden power loss on the SharedPreferences backend.
+  Future<bool> recoverPendingRestore() async {
+    if (_restoreBusy) {
+      throw StateError('Safwa restore already running');
+    }
+    _restoreBusy = true;
+    try {
+      return await _recover(await SharedPreferences.getInstance());
+    } finally {
+      _restoreBusy = false;
+    }
+  }
+
   static Future<void> _replace(
     SharedPreferences prefs,
-    Map<String, Object> values,
-  ) async {
-    final existing = prefs.getKeys().where(_allowedKey).toList();
+    Map<String, Object> values, {
+    RestoreCheckpoint? checkpoint,
+  }) async {
+    final existing = prefs.getKeys().where(_allowedKey).toList()..sort();
     for (final key in existing) {
-      if (!values.containsKey(key) && !await prefs.remove(key)) {
-        throw StateError('Unable to remove old Safwa preference');
+      if (!values.containsKey(key)) {
+        if (!await prefs.remove(key)) {
+          throw StateError('Unable to remove old Safwa preference');
+        }
+        if (checkpoint != null) await checkpoint('removed:$key');
       }
     }
     for (final entry in values.entries) {
@@ -272,12 +341,16 @@ class LocalSafwaBackup {
       if (!saved) {
         throw StateError('Could not restore Safwa preference');
       }
+      if (checkpoint != null) await checkpoint('saved:$key');
     }
   }
 
-  /// Explicitly requested replacement of the recognized Safwa preferences.
-  /// Validation occurs before writes. Rollback is best effort and cannot
-  /// guarantee all-or-nothing platform writes; tell users to retain originals.
+  /// Requires explicit consent. On-device journal is written before any
+  /// changes. If an interrupted process later restarts, initialization
+  /// attempts to restore the old snapshot and leaves the journal on failure.
+  ///
+  /// SharedPreferences has no cross-key atomicity or fsync guarantee.
+  /// This only improves best-effort recovery; production restore stays gated.
   Future<int> restoreBackup(
     String jsonText, {
     required bool confirmed,
@@ -285,19 +358,42 @@ class LocalSafwaBackup {
     if (!confirmed) {
       throw StateError('Backup restore requires explicit consent');
     }
-    final incoming = inspect(jsonText);
-    final prefs = await SharedPreferences.getInstance();
-    final previous = await _snapshot(prefs);
-    try {
-      await _replace(prefs, incoming._values);
-    } catch (error) {
-      try {
-        await _replace(prefs, previous);
-      } catch (_) {
-        throw StateError('Restore and rollback failed; original backup needed');
-      }
-      rethrow;
+    if (_restoreBusy) {
+      throw StateError('Safwa restore already running');
     }
-    return incoming.keyCount;
+    _restoreBusy = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await _recover(prefs);
+      final incoming = inspect(jsonText);
+      final previous = await _snapshot(prefs);
+      final undo = _encodeBackup(previous);
+      if (!await prefs.setString(recoveryKey, undo) ||
+          prefs.getString(recoveryKey) != undo) {
+        throw StateError('Unable to stage Safwa restore recovery');
+      }
+      try {
+        await _checkpoint('journal-written');
+        await _replace(prefs, incoming._values, checkpoint: _checkpoint);
+      } catch (error) {
+        // A deterministic approximation of an abrupt process exit in tests.
+        // A real termination never executes this catch/finally in the process.
+        if (error is SimulatedRestoreInterruption) rethrow;
+        try {
+          await _recover(prefs);
+        } catch (_) {
+          throw StateError(
+            'Restore and recovery failed; retain original encrypted backup',
+          );
+        }
+        rethrow;
+      }
+      if (!await prefs.remove(recoveryKey)) {
+        throw StateError('Restore completed but recovery journal remains');
+      }
+      return incoming.keyCount;
+    } finally {
+      _restoreBusy = false;
+    }
   }
 }
