@@ -89,7 +89,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Protected Local Backup'), findsOneWidget);
     expect(find.byKey(const Key('secure_backup_passphrase')), findsOneWidget);
-    expect(find.byKey(const Key('secure_backup_export')), findsOneWidget);
+    final button = find.byKey(const Key('secure_backup_export'));
+    await tester.scrollUntilVisible(
+      button, 140, scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(button, findsOneWidget);
     expect(find.byKey(const Key('secure_backup_restore')), findsNothing);
   });
 

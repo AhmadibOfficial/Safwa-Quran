@@ -189,6 +189,14 @@ class _SecureBackupPageState extends State<SecureBackupPage> {
             'saved, transmitted or recoverable by Safwa.',
           ),
         )),
+        if (message.isNotEmpty)
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              message,
+              key: const Key('secure_backup_status'),
+            ),
+          ),
         const SizedBox(height: 12),
         TextField(
           key: const Key('secure_backup_passphrase'),
@@ -284,14 +292,6 @@ class _SecureBackupPageState extends State<SecureBackupPage> {
           ),
         ],
         if (busy) const Center(child: CircularProgressIndicator()),
-        if (message.isNotEmpty)
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              message,
-              key: const Key('secure_backup_status'),
-            ),
-          ),
         const SizedBox(height: 16),
         const Text(
           'Offline and opt-in only. The previous unencrypted backup '
