@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'safwa_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'companion_core.dart';
 import 'companion_directory.dart';
@@ -47,6 +48,8 @@ class LocalSafwaBackup {
   /// preference snapshots, just like the existing legacy SharedPreferences store.
   static const recoveryKey = 'safwa_restore_recovery_v1';
   static bool _restoreBusy = false;
+
+  static bool get restoreBusy => _restoreBusy;
 
   Future<void> _checkpoint(String step) async {
     final checkpoint = restoreCheckpoint;
@@ -246,6 +249,25 @@ class LocalSafwaBackup {
     return _validateMap(values);
   }
 
+  /// Review-only read of the underlying legacy source while a cutover
+  /// controller has already blocked ALL routed application writes.
+  /// Never calls the gateway (which must fail closed while frozen).
+  /// Does not clear the SAFWA-014 undo journal or any original values.
+  static String captureLegacyForCutover(SharedPreferences legacy) {
+    if (_restoreBusy || legacy.containsKey(recoveryKey)) {
+      throw StateError('Legacy restore must finish before cutover');
+    }
+    final values = <String, Object>{};
+    for (final key in legacy.getKeys()) {
+      if (!_allowedKey(key)) continue;
+      final value = legacy.get(key);
+      if (value != null) {
+        values[key] = _validatedValue(key, value);
+      }
+    }
+    return _encodeBackup(_validateMap(values));
+  }
+
   Future<String> createBackupJson() async {
     final prefs = await SafwaPreferences.getInstance();
     _refusePending(prefs);
@@ -328,7 +350,11 @@ class LocalSafwaBackup {
     }
     _restoreBusy = true;
     try {
-      return await _recover(await SafwaPreferences.getInstance());
+      final prefs = await SafwaPreferences.getInstance();
+      // After a verified cutover, a stale legacy undo journal is NOT the
+      // canonical state and must never be replayed into SQLite.
+      if (prefs.isSqliteCanonical) return false;
+      return await _recover(prefs);
     } finally {
       _restoreBusy = false;
     }
@@ -391,6 +417,11 @@ class LocalSafwaBackup {
     _restoreBusy = true;
     try {
       final prefs = await SafwaPreferences.getInstance();
+      if (prefs.isSqliteCanonical) {
+        // The entire authenticated/validated input is written using a single
+        // SQLite transaction. Never write a plaintext legacy undo journal.
+        return prefs.restoreCanonicalJson(jsonText);
+      }
       await _recover(prefs);
       final incoming = inspect(jsonText);
       final previous = await _snapshot(prefs);
