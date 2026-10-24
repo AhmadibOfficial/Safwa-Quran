@@ -137,8 +137,7 @@ class _CompanionHubState extends State<CompanionHub> {
         child: Text(
           loading
             ? 'Loading saved tools'
-            : visible.length.toString() + ' tools found · ' +
-              pinned.length.toString() + ' pinned',
+            : '${visible.length} tools found · ${pinned.length} pinned',
           key: const Key('companion_result_count'),
           style: const TextStyle(color: _teal),
         ),
@@ -153,7 +152,7 @@ class _CompanionHubState extends State<CompanionHub> {
         ))
       else
         ...visible.map((item) => Card(
-          key: ValueKey('companion_card_' + item.id),
+          key: ValueKey('companion_card_${item.id}'),
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: const Color(0xFFF1ECE1),
@@ -163,10 +162,10 @@ class _CompanionHubState extends State<CompanionHub> {
               style: const TextStyle(fontWeight: FontWeight.w700)),
             subtitle: Text(item.description),
             trailing: IconButton(
-              key: ValueKey('companion_pin_' + item.id),
+              key: ValueKey('companion_pin_${item.id}'),
               tooltip: pinned.contains(item.id)
-                  ? 'Unpin ' + item.title
-                  : 'Pin ' + item.title,
+                  ? 'Unpin ${item.title}'
+                  : 'Pin ${item.title}',
               onPressed: busy ? null : () => _togglePin(item.id),
               icon: Icon(
                 pinned.contains(item.id)

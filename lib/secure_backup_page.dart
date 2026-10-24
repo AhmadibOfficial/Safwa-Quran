@@ -95,7 +95,9 @@ class _SecureBackupPageState extends State<SecureBackupPage> {
     try {
       final result = await engine.inspect(archiveText, secret);
       if (!mounted || input.text != archiveText ||
-          password.text != secret) return;
+          password.text != secret) {
+        return;
+      }
       setState(() {
         preview = result;
         inspectedHash = sha256.convert(utf8.encode(archiveText)).toString();
@@ -276,10 +278,10 @@ class _SecureBackupPageState extends State<SecureBackupPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Backup authenticated'),
-                  Text('Preference keys: ' + preview!.keyCount.toString()),
-                  Text('Journal days: ' + preview!.journalDays.toString()),
-                  Text('Saved Surahs: ' + preview!.savedSurahs.toString()),
-                  Text('Saved ayah refs: ' + preview!.savedAyat.toString()),
+                  Text('Preference keys: ${preview!.keyCount}'),
+                  Text('Journal days: ${preview!.journalDays}'),
+                  Text('Saved Surahs: ${preview!.savedSurahs}'),
+                  Text('Saved ayah refs: ${preview!.savedAyat}'),
                 ],
               ),
             )),

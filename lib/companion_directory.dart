@@ -51,7 +51,7 @@ List<CompanionItem> visibleCompanionItems(
   final terms = query.toLowerCase().trim().split(RegExp(r'\s+'))
       .where((term) => term.isNotEmpty).toList();
   final filtered = companionItems.where((item) {
-    final text = (item.title + ' ' + item.description).toLowerCase();
+    final text = '${item.title} ${item.description}'.toLowerCase();
     return terms.every(text.contains);
   }).toList();
   filtered.sort((a, b) {
