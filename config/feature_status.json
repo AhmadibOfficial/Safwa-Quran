@@ -102,7 +102,7 @@
     {
       "module": "controlled_sqlite_cutover_rehearsal",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-015C: experimental in-process cutover controller with SQLite v2 activation marker committed atomically with full snapshot, freeze barrier, stale-session redirection, fail-closed reboot selection, SQL backup restore and canonical SQL privacy erasure; 14 new regression tests defined, not yet run. No shipping activation. Cross-isolate, device crashes, plaintext-retention privacy and independent security review pending."
+      "note": "SAFWA-015C: experimental in-process cutover controller with SQLite v2 activation marker committed atomically with full snapshot, freeze barrier, stale-session redirection, fail-closed reboot selection, SQL backup restore and canonical SQL privacy erasure; 15 new regression tests defined, not yet run. No shipping activation. Cross-isolate, device crashes, plaintext-retention privacy and independent security review pending."
     }
   ],
   "quran_reader_activation": "BLOCKED",
