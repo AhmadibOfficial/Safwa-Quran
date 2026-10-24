@@ -157,125 +157,7 @@ class SafwaSqliteStore {
       return (active: false, sourceSha: null);
     }
     if (state == 'sqlite' && hash is String &&
-        RegExp(r'^[0-9a-f]{64}
-  /// reviewer records, Quran text, unknown future keys or other-app secrets.
-  Future<Map<String, Object>> readValues() async {
-    final archive = await _readArchive(_opened);
-    return const LocalSafwaBackup().inspect(archive).validatedValues;
-  }
-
-  Future<String> exportValidatedJson() => _readArchive(_opened);
-
-  Future<void> setPreference(String key, Object value) async {
-    await _opened.transaction((txn) async {
-      final previous = const LocalSafwaBackup()
-          .inspect(await _readArchive(txn)).validatedValues;
-      final updated = <String, Object>{...previous, key: value};
-      await _writeArchive(
-        txn,
-        LocalSafwaBackup.encodeValidatedSnapshot(updated),
-      );
-    });
-  }
-
-  Future<void> removePreference(String key) async {
-    await _opened.transaction((txn) async {
-      final previous = const LocalSafwaBackup()
-          .inspect(await _readArchive(txn)).validatedValues;
-      if (!previous.containsKey(key)) return;
-      final updated = <String, Object>{...previous}..remove(key);
-      await _writeArchive(
-        txn,
-        LocalSafwaBackup.encodeValidatedSnapshot(updated),
-      );
-    });
-  }
-
-  static Future<void> _writeArchive(
-    Transaction txn,
-    String validatedArchive,
-  ) async {
-    final changed = await txn.update(
-      'safwa_snapshot',
-      {'archive': validatedArchive},
-      where: 'id = ?',
-      whereArgs: [1],
-    );
-    if (changed != 1) throw StateError('SAFWA-015 snapshot update failed');
-  }
-
-  /// One transactional replacement, with an optional deterministic failure
-  /// seam used by TESTS ONLY. Throws inside the transaction roll everything
-  /// back; successful completion commits a single complete replacement.
-  Future<int> restoreValidatedJson(
-    String backupJson, {
-    required bool confirmed,
-    Future<void> Function()? testCheckpointBeforeCommit,
-  }) async {
-    if (!confirmed) throw StateError('Explicit restore consent required');
-    // Validate untrusted input BEFORE a database transaction or mutation.
-    final checked = const LocalSafwaBackup().inspect(backupJson);
-    final serialized = LocalSafwaBackup.encodeValidatedSnapshot(
-      checked.validatedValues,
-    );
-    await _opened.transaction((txn) async {
-      await _writeArchive(txn, serialized);
-      await testCheckpointBeforeCommit?.call();
-    });
-    return checked.keyCount;
-  }
-
-  /// Decrypt and validate off-database, then transactionally replace.
-  /// This is NOT yet wired to the live backup UI or SharedPreferences store.
-  Future<int> restoreEncryptedJson(
-    String envelope,
-    String passphrase, {
-    required bool confirmed,
-    Future<void> Function()? testCheckpointBeforeCommit,
-  }) async {
-    if (!confirmed) throw StateError('Explicit restore consent required');
-    final inspected = await const EncryptedSafwaBackup()
-        .inspect(envelope, passphrase);
-    final validatedArchive = LocalSafwaBackup.encodeValidatedSnapshot(
-      inspected.validatedValues,
-    );
-    return restoreValidatedJson(
-      validatedArchive,
-      confirmed: true,
-      testCheckpointBeforeCommit: testCheckpointBeforeCommit,
-    );
-  }
-
-  /// Explicit, NON-DESTRUCTIVE one-way staging for planned migration. This
-  /// never clears SharedPreferences, and refuses to overwrite any SQLite data.
-  /// Legacy and SQLite must not become simultaneous production writers.
-  Future<int> stageLegacyJson(
-    String legacyBackupJson, {
-    required bool confirmed,
-  }) async {
-    if (!confirmed) throw StateError('Explicit staging consent required');
-    final inspected = const LocalSafwaBackup().inspect(legacyBackupJson);
-    final archive = LocalSafwaBackup.encodeValidatedSnapshot(
-      inspected.validatedValues,
-    );
-    await _opened.transaction((txn) async {
-      final existing = const LocalSafwaBackup()
-          .inspect(await _readArchive(txn)).validatedValues;
-      if (existing.isNotEmpty) {
-        throw StateError('Refusing to overwrite an existing SQLite snapshot');
-      }
-      await _writeArchive(txn, archive);
-    });
-    return inspected.keyCount;
-  }
-
-  Future<void> close() async {
-    final db = _db;
-    _db = null;
-    if (db != null) await db.close();
-  }
-}
-).hasMatch(hash)) {
+        RegExp(r'^[0-9a-f]{64}$').hasMatch(hash)) {
       return (active: true, sourceSha: hash);
     }
     throw StateError('Invalid Safwa cutover activation record');
@@ -284,11 +166,9 @@ class SafwaSqliteStore {
   Future<({bool active, String? sourceSha})> readActivation() =>
       _readActivation(_opened);
 
-  /// Opt-in *review-only* cutover. Source bytes and activation marker must
-  /// commit or rollback together. Do not call from the production app.
-  ///
-  /// A previous rehearsal is acceptable ONLY if byte-normalized content
-  /// matches the expected source. Disallow overwriting unrelated SQL state.
+  /// Review-only activation. Source snapshot and activation metadata commit
+  /// together, so failures within the transaction roll back both records.
+  /// Never called by app startup or production widgets.
   Future<void> activateValidatedLegacy(
     String sourceBackup, {
     required bool confirmed,
@@ -306,14 +186,16 @@ class SafwaSqliteStore {
       if (state.active) {
         throw StateError('SQLite backend already activated');
       }
-      final old = const LocalSafwaBackup()
+      final prior = const LocalSafwaBackup()
           .inspect(await _readArchive(txn));
-      if (old.keyCount != 0 && old.sha256 != checked.sha256) {
+      if (prior.keyCount != 0 && prior.sha256 != checked.sha256) {
         throw StateError('SQLite destination contains divergent data');
       }
+
       if (checkpoint != null) await checkpoint('before-snapshot');
       await _writeArchive(txn, canonical);
       if (checkpoint != null) await checkpoint('after-snapshot');
+
       final changed = await txn.update(
         'safwa_activation',
         {'state': 'sqlite', 'source_sha': checked.sha256},
