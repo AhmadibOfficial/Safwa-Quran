@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'companion_core.dart';
+import 'companion_directory.dart';
 import 'prayer_times.dart';
 import 'prayer_week.dart';
 import 'secure_backup_page.dart';
@@ -15,66 +16,171 @@ void _open(BuildContext context, Widget screen) {
   Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
 }
 
-class CompanionHub extends StatelessWidget {
+class CompanionHub extends StatefulWidget {
   const CompanionHub({super.key});
 
   @override
+  State<CompanionHub> createState() => _CompanionHubState();
+}
+
+class _CompanionHubState extends State<CompanionHub> {
+  final pinsStore = const LocalCompanionPins();
+  Set<String> pinned = <String>{};
+  String search = '';
+  bool busy = false;
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPins();
+  }
+
+  Future<void> _loadPins() async {
+    try {
+      final result = await pinsStore.read();
+      if (mounted) setState(() { pinned = result; loading = false; });
+    } catch (_) {
+      if (mounted) {
+        setState(() => loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not load saved companion pins.'),
+        ));
+      }
+    }
+  }
+
+  Future<void> _togglePin(String id) async {
+    if (busy || loading) return;
+    setState(() => busy = true);
+    try {
+      final result = await pinsStore.toggle(id);
+      if (mounted) setState(() => pinned = result);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Could not save the companion pin locally.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Widget _pageFor(String id) => switch (id) {
+    'prayer_times' => const PrayerTimesPage(),
+    'prayer_week' => const PrayerWeekPage(),
+    'qibla' => const QiblaPage(),
+    'reminders' => const ReminderSettingsPage(),
+    'salah_journal' => const SalahJournalPage(),
+    'salah_history' => const SalahHistoryPage(),
+    'tasbih' => const TasbihPage(),
+    'hijri' => const HijriCalendarPage(),
+    'adhkar' => const ContentLibraryGate(
+      title: 'Adhkar & Du’a', type: 'supplications',
+    ),
+    'recitations' => const ContentLibraryGate(
+      title: 'Quran Recitations', type: 'recitation audio',
+    ),
+    'learning' => const LearningPlanPage(),
+    'languages' => const LanguagePreferencesPage(),
+    'privacy' => const PrivacyPage(),
+    _ => throw const FormatException('Unknown companion destination'),
+  };
+
+  IconData _iconFor(String id) => switch (id) {
+    'prayer_times' => Icons.access_time,
+    'prayer_week' => Icons.date_range_outlined,
+    'qibla' => Icons.explore_outlined,
+    'reminders' => Icons.notifications_none,
+    'salah_journal' => Icons.check_circle_outline,
+    'salah_history' => Icons.view_week_outlined,
+    'tasbih' => Icons.touch_app_outlined,
+    'hijri' => Icons.calendar_month_outlined,
+    'adhkar' => Icons.favorite_border,
+    'recitations' => Icons.headphones_outlined,
+    'learning' => Icons.school_outlined,
+    'languages' => Icons.language_outlined,
+    'privacy' => Icons.privacy_tip_outlined,
+    _ => Icons.apps_outlined,
+  };
+
+  @override
   Widget build(BuildContext context) {
-    final sections = <({String title, String detail, IconData icon, Widget page})>[
-      (title: 'Prayer Times', detail: 'Offline times and next Salah',
-       icon: Icons.access_time, page: const PrayerTimesPage()),
-      (title: '7-Day Prayer Planner',
-       detail: 'Offline weekly Salah estimates and a copyable schedule',
-       icon: Icons.date_range_outlined, page: const PrayerWeekPage()),
-      (title: 'Qibla Direction', detail: 'True-north bearing from a chosen city',
-       icon: Icons.explore_outlined, page: const QiblaPage()),
-      (title: 'Prayer Reminders', detail: 'Save reminder preferences — alerts not yet scheduled',
-       icon: Icons.notifications_none, page: const ReminderSettingsPage()),
-      (title: 'My Salah Journal', detail: 'Private, optional daily prayer log',
-       icon: Icons.check_circle_outline, page: const SalahJournalPage()),
-      (title: 'Weekly Salah Journal',
-       detail: 'Review or update your private entries across seven days',
-       icon: Icons.view_week_outlined, page: const SalahHistoryPage()),
-      (title: 'Tasbih Counter', detail: 'Private dhikr counting tool',
-       icon: Icons.touch_app_outlined, page: const TasbihPage()),
-      (title: 'Islamic Calendar', detail: 'Approximate civil Hijri dates',
-       icon: Icons.calendar_month_outlined, page: const HijriCalendarPage()),
-      (title: 'Adhkar & Du’a', detail: 'Authentic source review required',
-       icon: Icons.favorite_border, page: const ContentLibraryGate(
-         title: 'Adhkar & Du’a', type: 'supplications')),
-      (title: 'Quran Recitations', detail: 'Audio rights and reciter review required',
-       icon: Icons.headphones_outlined, page: const ContentLibraryGate(
-         title: 'Quran Recitations', type: 'recitation audio')),
-      (title: 'Tajwid & Learning', detail: 'Personal study planner; lessons pending review',
-       icon: Icons.school_outlined, page: const LearningPlanPage()),
-      (title: 'Languages', detail: 'Save preferred language; translations pending',
-       icon: Icons.language_outlined, page: const LanguagePreferencesPage()),
-      (title: 'Privacy & Data', detail: 'Offline storage and account-free experience',
-       icon: Icons.privacy_tip_outlined, page: const PrivacyPage()),
-    ];
+    final visible = visibleCompanionItems(search, pinned);
     return ListView(padding: const EdgeInsets.all(18), children: [
       const Text('SAFWA INSTITUTE / YOUR COMPANION',
-          style: TextStyle(color: _teal, fontSize: 11,
-            fontWeight: FontWeight.w700)),
+        style: TextStyle(color: _teal, fontSize: 11,
+          fontWeight: FontWeight.w700)),
       const SizedBox(height: 12),
       const Text('Faith in your daily routine.',
         style: TextStyle(color: _navy, fontSize: 28,
           fontWeight: FontWeight.w800)),
       const SizedBox(height: 9),
       const Text('Tools work offline where possible. Quran and other '
-          'religious content remain locked until independently reviewed.'),
-      const SizedBox(height: 15),
-      ...sections.map((item) => Card(
-        child: ListTile(
-          leading: CircleAvatar(backgroundColor: const Color(0xFFF1ECE1),
-            child: Icon(item.icon, color: _navy)),
-          title: Text(item.title,
-            style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text(item.detail),
-          trailing: const Icon(Icons.chevron_right, color: _gold),
-          onTap: () => _open(context, item.page),
+        'religious content remain locked until independently reviewed.'),
+      const SizedBox(height: 16),
+      TextField(
+        key: const Key('companion_search'),
+        textInputAction: TextInputAction.search,
+        decoration: const InputDecoration(
+          labelText: 'Find a companion tool',
+          hintText: 'Search prayer, journal, learning...',
+          prefixIcon: Icon(Icons.search),
+          border: OutlineInputBorder(),
         ),
-      )),
+        onChanged: (value) => setState(() => search = value),
+      ),
+      const SizedBox(height: 12),
+      Semantics(
+        liveRegion: true,
+        child: Text(
+          loading
+            ? 'Loading saved tools'
+            : visible.length.toString() + ' tools found · ' +
+              pinned.length.toString() + ' pinned',
+          key: const Key('companion_result_count'),
+          style: const TextStyle(color: _teal),
+        ),
+      ),
+      const SizedBox(height: 12),
+      if (loading)
+        const Center(child: CircularProgressIndicator())
+      else if (visible.isEmpty)
+        const Card(child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Text('No companion tools match your search.'),
+        ))
+      else
+        ...visible.map((item) => Card(
+          key: ValueKey('companion_card_' + item.id),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: const Color(0xFFF1ECE1),
+              child: Icon(_iconFor(item.id), color: _navy),
+            ),
+            title: Text(item.title,
+              style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text(item.description),
+            trailing: IconButton(
+              key: ValueKey('companion_pin_' + item.id),
+              tooltip: pinned.contains(item.id)
+                  ? 'Unpin ' + item.title
+                  : 'Pin ' + item.title,
+              onPressed: busy ? null : () => _togglePin(item.id),
+              icon: Icon(
+                pinned.contains(item.id)
+                    ? Icons.star : Icons.star_border,
+                color: _gold,
+              ),
+            ),
+            onTap: () => _open(context, _pageFor(item.id)),
+          ),
+        )),
+      const SizedBox(height: 12),
+      const Text('Pinned items are navigation shortcuts, not endorsements '
+        'or unlocked religious content. Pins are saved on this device.',
+        style: TextStyle(color: _navy, fontSize: 12)),
     ]);
   }
 }
