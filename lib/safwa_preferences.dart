@@ -8,7 +8,63 @@ import 'safwa_sqlite_store.dart';
 /// coordinated cutover passes all migration and device evidence gates.
 /// [sqliteForVerification] is explicit and NEVER changes the live backend.
 /// Code using this gateway does not by itself enable SQLite in production.
+/// Internal experimental cutover interface. The production runtime NEVER
+/// installs one. Existing preference objects consult this port on EVERY
+/// access, so stale handles cannot silently continue using legacy storage.
+abstract class SafwaCutoverPort {
+  Set<String> getKeys();
+  bool containsKey(String key);
+  Object? get(String key);
+  Future<bool> setValue(String key, Object value);
+  Future<bool> remove(String key);
+  bool get sqliteCanonical;
+  Future<int> restoreCanonical(String archive);
+  Future<int> clearCanonical();
+}
+
 class SafwaPreferences {
+  static SafwaCutoverPort? _isolatedReviewPort;
+
+  /// For isolated synthetic tests only; NOT called by main(), app startup,
+  /// preferences UI, backup screen or any shipping route.
+  static void attachIsolatedReviewPort(SafwaCutoverPort port) {
+    if (_isolatedReviewPort != null) {
+      throw StateError('A cutover review session is already active');
+    }
+    _isolatedReviewPort = port;
+  }
+
+  static void detachIsolatedReviewPort(SafwaCutoverPort port) {
+    if (!identical(_isolatedReviewPort, port)) {
+      throw StateError('Cannot detach unrelated review session');
+    }
+    _isolatedReviewPort = null;
+  }
+
+  // Indirection also covers preference objects acquired before the review
+  // runtime was installed. Explicit SQLite verification sessions are separate.
+  SafwaCutoverPort? get _port =>
+      _sqlite == null ? _isolatedReviewPort : null;
+
+  bool get isSqliteCanonical =>
+      _port?.sqliteCanonical ?? (_sqlite != null);
+
+  Future<int> restoreCanonicalJson(String archive) async {
+    final p = _port;
+    if (p == null || !p.sqliteCanonical) {
+      throw StateError('SQLite canonical restore is not active');
+    }
+    return p.restoreCanonical(archive);
+  }
+
+  Future<int> clearCanonicalData() async {
+    final p = _port;
+    if (p == null || !p.sqliteCanonical) {
+      throw StateError('SQLite canonical erasure is not active');
+    }
+    return p.clearCanonical();
+  }
+
   SafwaPreferences._legacy(this._legacy)
       : _sqlite = null,
         _snapshot = null;
@@ -35,13 +91,22 @@ class SafwaPreferences {
 
   Set<String> getKeys() {
     final legacy = _legacy;
+    final port = _port;
+    if (port != null) return port.getKeys();
     return legacy != null ? legacy.getKeys() : _snapshot!.keys.toSet();
   }
 
-  bool containsKey(String key) => _legacy?.containsKey(key) ??
-      _snapshot!.containsKey(key);
+  bool containsKey(String key) {
+    final port = _port;
+    if (port != null) return port.containsKey(key);
+    return _legacy?.containsKey(key) ?? _snapshot!.containsKey(key);
+  }
 
-  Object? get(String key) => _legacy?.get(key) ?? _snapshot?[key];
+  Object? get(String key) {
+    final port = _port;
+    if (port != null) return port.get(key);
+    return _legacy?.get(key) ?? _snapshot?[key];
+  }
 
   String? getString(String key) => get(key) as String?;
   bool? getBool(String key) => get(key) as bool?;
@@ -54,6 +119,8 @@ class SafwaPreferences {
   }
 
   Future<bool> _write(String key, Object value) async {
+    final port = _port;
+    if (port != null) return port.setValue(key, value);
     final legacy = _legacy;
     if (legacy != null) {
       if (value is String) return legacy.setString(key, value);
@@ -78,6 +145,8 @@ class SafwaPreferences {
       _write(key, value);
 
   Future<bool> remove(String key) async {
+    final port = _port;
+    if (port != null) return port.remove(key);
     final legacy = _legacy;
     if (legacy != null) return legacy.remove(key);
     await _sqlite!.removePreference(key);
