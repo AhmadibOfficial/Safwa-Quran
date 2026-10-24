@@ -133,8 +133,22 @@ void main() {
     await tester.tap(checkbox);
     await tester.pumpAndSettle();
 
+    // Verify persistence first. Expanding the day scrolls the summary
+    // out of Flutter's compact widget-test viewport, so scroll back to
+    // the actual header before asserting that the rendered total updated.
     expect(await const LocalSalahJournal().read(monday), contains('Fajr'));
-    expect(find.text('1 personal entry recorded this week'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('history_total')),
+      -200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    final total = find.byKey(const Key('history_total'));
+    expect(total, findsOneWidget);
+    expect(
+      tester.widget<Text>(total).data,
+      '1 personal entry recorded this week',
+    );
   });
 
   testWidgets('companion hub opens private history without location access',
