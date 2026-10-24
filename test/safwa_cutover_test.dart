@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 import 'package:safwa_quran/companion_core.dart';
 import 'package:safwa_quran/local_backup.dart';
 import 'package:safwa_quran/safwa_cutover.dart';
@@ -228,6 +229,44 @@ void main() {
       ),
       throwsStateError,
     );
+  });
+
+  test('schema v1 SQLite upgrades to v2 without erasing old snapshot',
+      () async {
+    final upgradePath = '${scratch.path}/v1-upgrade.sqlite3';
+    final initialArchive = LocalSafwaBackup.captureLegacyForCutover(legacy);
+    final oldDatabase = await databaseFactoryFfi.openDatabase(
+      upgradePath,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE safwa_snapshot (
+              id INTEGER NOT NULL PRIMARY KEY CHECK(id = 1),
+              archive TEXT NOT NULL
+            )
+          ''');
+          await db.insert('safwa_snapshot', {
+            'id': 1,
+            'archive': initialArchive,
+          });
+        },
+      ),
+    );
+    await oldDatabase.close();
+
+    final upgraded = SafwaSqliteStore(
+      factory: databaseFactoryFfi,
+      path: upgradePath,
+    );
+    try {
+      await upgraded.open();
+      expect((await upgraded.readActivation()).active, false);
+      expect((await upgraded.readValues())['safwa_prayer_city'], 'kaduna');
+      expect((await upgraded.readValues())['safwa_tasbih_count'], 11);
+    } finally {
+      await upgraded.close();
+    }
   });
 
   test('committed SQL ignores stale legacy undo journal after restart',
