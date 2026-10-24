@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'companion_core.dart';
 import 'prayer_times.dart';
 import 'prayer_week.dart';
+import 'salah_history.dart';
 
 const _navy = Color(0xFF142547);
 const _gold = Color(0xFFAD8744);
@@ -30,6 +31,9 @@ class CompanionHub extends StatelessWidget {
        icon: Icons.notifications_none, page: const ReminderSettingsPage()),
       (title: 'My Salah Journal', detail: 'Private, optional daily prayer log',
        icon: Icons.check_circle_outline, page: const SalahJournalPage()),
+      (title: 'Weekly Salah Journal',
+       detail: 'Review or update your private entries across seven days',
+       icon: Icons.view_week_outlined, page: const SalahHistoryPage()),
       (title: 'Tasbih Counter', detail: 'Private dhikr counting tool',
        icon: Icons.touch_app_outlined, page: const TasbihPage()),
       (title: 'Islamic Calendar', detail: 'Approximate civil Hijri dates',
