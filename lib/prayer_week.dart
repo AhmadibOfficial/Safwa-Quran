@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'safwa_preferences.dart';
 
 import 'prayer_times.dart';
 
@@ -108,7 +108,7 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
 
   Future<void> _load() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SafwaPreferences.getInstance();
       if (!mounted) {
         return;
       }
@@ -136,7 +136,7 @@ class _PrayerWeekPageState extends State<PrayerWeekPage> {
 
   Future<void> _save() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await SafwaPreferences.getInstance();
       if (cityId != null) {
         if (!await prefs.setString('safwa_prayer_city', cityId!)) {
           throw StateError('City setting not saved');
