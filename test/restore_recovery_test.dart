@@ -133,6 +133,35 @@ void main() {
     expect(prefs.getString('safwa_prayer_city'), 'kaduna');
   });
 
+  test('each mutation checkpoint can recover the old snapshot', () async {
+    final initialArchive = await prepareArchive();
+    final steps = <String>[];
+    await LocalSafwaBackup(
+      restoreCheckpoint: (step) async => steps.add(step),
+    ).restoreBackup(initialArchive, confirmed: true);
+    final mutations = steps
+        .where((step) => step.startsWith('removed:') ||
+            step.startsWith('saved:'))
+        .toList();
+    expect(mutations, isNotEmpty);
+    for (final stopAt in mutations) {
+      final archive = await prepareArchive();
+      final interrupted = LocalSafwaBackup(
+        restoreCheckpoint: (step) async {
+          if (step == stopAt) throw SimulatedRestoreInterruption();
+        },
+      );
+      await expectLater(
+        interrupted.restoreBackup(archive, confirmed: true),
+        throwsA(isA<SimulatedRestoreInterruption>()),
+      );
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey(LocalSafwaBackup.recoveryKey), isTrue);
+      expect(await const LocalSafwaBackup().recoverPendingRestore(), isTrue);
+      await assertOldSnapshot();
+    }
+  });
+
   test('unconfirmed restore does not stage a journal', () async {
     final archive = await prepareArchive();
     await expectLater(
