@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'companion_core.dart';
 import 'prayer_times.dart';
 import 'prayer_week.dart';
+import 'local_backup_page.dart';
 import 'salah_history.dart';
 
 const _navy = Color(0xFF142547);
@@ -591,6 +592,13 @@ class PrivacyPage extends StatelessWidget {
           'recording sensitive notes here; device backups and other '
           'installed software may affect privacy.'),
       const SizedBox(height: 24),
+      OutlinedButton.icon(
+        key: const Key('privacy_backup_restore'),
+        onPressed: () => _open(context, const SafwaBackupPage()),
+        icon: const Icon(Icons.backup_outlined),
+        label: const Text('Local backup & restore'),
+      ),
+      const SizedBox(height: 12),
       OutlinedButton.icon(
         onPressed: () => _delete(context),
         icon: const Icon(Icons.delete_outline),
