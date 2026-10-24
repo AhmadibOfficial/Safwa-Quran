@@ -109,19 +109,19 @@ void main() {
   test('cannot overlap restore transactions', () async {
     final archive = await prepareArchive();
     final latch = Completer<void>();
+    final staged = Completer<void>();
     final paused = LocalSafwaBackup(
       restoreCheckpoint: (step) async {
-        if (step == 'journal-written') await latch.future;
+        if (step == 'journal-written') {
+          staged.complete();
+          await latch.future;
+        }
       },
     );
     final first = paused.restoreBackup(archive, confirmed: true);
-    // Wait until undo journal has been staged and the first restore pauses.
+    // Deterministically wait until the write-ahead journal is staged.
+    await staged.future;
     final prefs = await SharedPreferences.getInstance();
-    for (var attempt = 0;
-        !prefs.containsKey(LocalSafwaBackup.recoveryKey) && attempt < 100;
-        attempt++) {
-      await Future<void>.delayed(const Duration(milliseconds: 1));
-    }
     expect(prefs.containsKey(LocalSafwaBackup.recoveryKey), isTrue);
     await expectLater(
       const LocalSafwaBackup().restoreBackup(archive, confirmed: true),
