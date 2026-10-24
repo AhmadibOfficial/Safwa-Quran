@@ -92,7 +92,7 @@
     {
       "module": "sqlite_transactional_foundation",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-015 isolated file-backed SQLite snapshot adapter and 9 new FFI tests; requires online package resolution and Kali execution. NOT live-wired: all active SharedPreferences consumers and SAFWA-014 recovery remain unchanged. Full cross-consumer migration, hardware process-kill/low-storage tests and independent reviewers pending."
+      "note": "SAFWA-015 isolated file-backed SQLite adapter + 9 FFI and 5 copy-only migration rehearsal tests committed. NOT executed on Kali; new code unverified. Legacy SharedPreferences all still live. Automated migration rehearsal checks allowlisted hashes and source stability but does not cut over or delete data. Full consumer migration, physical-device crash tests and independent reviews pending."
     }
   ],
   "quran_reader_activation": "BLOCKED",
