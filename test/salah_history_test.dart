@@ -108,7 +108,7 @@ void main() {
     expect(find.byKey(const Key('history_total')), findsOneWidget);
   });
 
-  testWidgets('expanding today and marking a prayer persists a local entry',
+  testWidgets('expanding first weekday and marking a prayer persists locally',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(home: SalahHistoryPage()));
     await tester.pumpAndSettle();
