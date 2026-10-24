@@ -10,7 +10,7 @@ This branch introduces an explicit **in-process, test-only review controller**, 
 - `SafwaSqliteStore` schema v2 adds `safwa_activation` containing one strictly validated `legacy` or `sqlite` state and optional source SHA-256.
 - `activateValidatedLegacy` accepts a validated allowlisted snapshot, verifies that any staged SQLite data is empty or matches it, and writes **the snapshot and activation marker in one SQL transaction**. Version-1 SQL files upgrade via `onUpgrade` without deleting the snapshot.
 - `SafwaCutoverController.openForIsolatedReview` reads the SQLite activation record before selecting its canonical backend. A persisted `sqlite` marker selects SQLite on restart and **never falls back** to altered/stale SharedPreferences; absent/corrupt/unknown markers fail closed.
-- During explicit cutover, controller freezes gateway operations, waits for already-accepted routed writes, and captures only allowlisted legacy data. Tests inject a failure before the snapshot update, after the snapshot update, after the activation marker but **before commit**, and after commit before the in-memory switch. Failed SQL transactions preserve legacy as canonical. If the SQL commit completed but code then fails, the in-memory controller locks itself; restarted controller discovers persisted SQLite activation.
+- During explicit cutover, controller freezes gateway operations, waits for already-accepted routed writes, and captures only allowlisted legacy data. It rechecks source bytes inside the SQLite staging transaction and aborts if a direct legacy writer altered the data before activation. Tests inject a failure before the snapshot update, after the snapshot update, after the activation marker but **before commit**, and after commit before the in-memory switch. Failed SQL transactions preserve legacy as canonical. If the SQL commit completed but code then fails, the in-memory controller locks itself; restarted controller discovers persisted SQLite activation.
 - `SafwaPreferences` performs dynamic forwarding to the review controller on **every access**, including handles acquired before the controller was installed. Both original pages and LocalSafwaBackup use the same typed facade. The production `SafwaPreferences.getInstance()` continues to use SharedPreferences because `main()` **does not install** any cutover port or SQL bootstrap.
 - Post-activation test-only backup restore calls a single SQLite transaction rather than the obsolete per-key undo journal. The existing encrypted import still authenticates through the original engine, then delegates into the canonical restore.
 - Post-activation privacy erasure replaces the SQL snapshot with an empty allowlisted snapshot in one transaction. **Legacy values are intentionally retained** during rehearsal. This is NOT sufficient to claim comprehensive personal-data erasure in production; independent privacy review must set a safe retention/removal policy.
@@ -25,7 +25,7 @@ SQLite WAL + synchronous FULL may provide stronger durability, but **Dart fault 
 
 ## Test suite — defined, not run
 
-`test/safwa_cutover_test.dart` (14 cases):
+`test/safwa_cutover_test.dart` (15 cases):
 1. Legacy remains canonical before activation.
 2. Snapshot and marker commit together; a session obtained earlier reads/writes the new store.
 3. Failures after the snapshot and after the activation marker but before COMMIT roll back both rows and leave legacy canonical.
@@ -40,8 +40,9 @@ SQLite WAL + synchronous FULL may provide stronger durability, but **Dart fault 
 12. Legacy session obtained before review-port installation dynamically follows the activated SQLite source.
 13. Existing SQLite schema-v1 snapshot upgrades to schema-v2 without deletion.
 14. Activation-marker write failure before commit never persists a partial cutover.
+15. Out-of-band legacy mutation during a SQL stage transaction aborts activation rather than committing a stale snapshot.
 
-Expect **105 Flutter tests** if this branch only adds the 14 new tests to 91 inherited passing SAFWA-015B tests, plus the 11 Python integrity checks. **This is an expected count, not a test result.**
+Expect **106 Flutter tests** if this branch only adds the 15 new tests to 91 inherited passing SAFWA-015B tests, plus the 11 Python integrity checks. **This is an expected count, not a test result.**
 
 Tests use only uniquely generated disposable filesystem SQLite DBs and mock SharedPreferences, not private data or native apps.
 
@@ -80,7 +81,7 @@ If Flutter tests, SQL upgrade, FFI or package resolution fail, keep the log and 
 
 ## External acceptance — remains blocked
 
-1. **Isolated test pass:** exact commit SHA Kali analyzer, 105 Flutter tests, 11 Python checks, policy lock and worktree state verified.
+1. **Isolated test pass:** exact commit SHA Kali analyzer, 106 Flutter tests, 11 Python checks, policy lock and worktree state verified.
 2. **Full production bootstrap:** after formal approval, startup must establish a single canonical runtime before any widgets, plugins or background isolates can access Safwa state. No cold-start legacy fallback if an activated SQL DB is absent or corrupt. Cross-isolate synchronization or fail-closed isolation is mandatory.
 3. **Concurrency:** enforce all writers (including pre-existing handles, imported restore, journal updates, read-modify-write counters, deletion), and prevent direct SharedPreferences writes. Add process, isolate, OS restart and app-version concurrency tests. A mere in-process frozen flag is not enough.
 4. **Migration:** keep original legacy data encrypted or isolated appropriately until confirmed recovery; verify full equality and policy-safe erasure of legacy after the approved retention period. No permanent plaintext shadows and no loss of keys outside the allowlist.
