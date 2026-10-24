@@ -16,6 +16,11 @@ class SafwaBackupPreview {
   final Map<String, Object> _values;
   final String sha256;
 
+  /// Immutable, fully allowlisted typed snapshot for the SQLite transaction
+  /// adapter. Does not include policy controls or Quran corpus data.
+  Map<String, Object> get validatedValues =>
+      Map<String, Object>.unmodifiable(_values);
+
   int get keyCount => _values.length;
   int get journalDays =>
       _values.keys.where((key) => key.startsWith('safwa_salah_')).length;
@@ -246,6 +251,12 @@ class LocalSafwaBackup {
     _refusePending(prefs);
     final values = await _snapshot(prefs);
     return _encodeBackup(values);
+  }
+
+  /// Serialize only validated Safwa-owned preference values. Existing
+  /// backup schema/checksum/limits are shared with the SQLite adapter.
+  static String encodeValidatedSnapshot(Map<String, Object> values) {
+    return _encodeBackup(_validateMap(values));
   }
 
   static String _encodeBackup(Map<String, Object> values) {
