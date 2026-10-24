@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-015b-preference-gateway",
+  "development_branch": "feature/safwa-015c-controlled-cutover",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -96,8 +96,13 @@
     },
     {
       "module": "preference_gateway",
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "SAFWA-015B owner tested exact SHA 7c3356df1993e615139a9f894cde06cdaccb05ae on Kali: 91 Flutter tests, 11 Python Quran integrity tests, analyzer clean, offline source-only gate PASS. No production SQLite cutover or hardware recovery proof."
+    },
+    {
+      "module": "controlled_sqlite_cutover_rehearsal",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-015B: all listed direct application and backup preference consumers use shared SafwaPreferences facade; getInstance always SharedPreferences, SQLite allowed only as explicit isolated verification session. 5 new unexecuted tests. Canonical durable cutover, physical crash recovery and independent reviews remain BLOCKED."
+      "note": "SAFWA-015C: experimental in-process cutover controller with SQLite v2 activation marker committed atomically with full snapshot, freeze barrier, stale-session redirection, fail-closed reboot selection, SQL backup restore and canonical SQL privacy erasure; 14 new regression tests defined, not yet run. No shipping activation. Cross-isolate, device crashes, plaintext-retention privacy and independent security review pending."
     }
   ],
   "quran_reader_activation": "BLOCKED",
