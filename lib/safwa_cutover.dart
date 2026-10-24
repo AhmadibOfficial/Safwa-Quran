@@ -181,7 +181,16 @@ class SafwaCutoverController implements SafwaCutoverPort {
       await _sql.activateValidatedLegacy(
         source,
         confirmed: true,
-        checkpoint: checkpoint,
+        checkpoint: (step) async {
+          if (checkpoint != null) await checkpoint(step);
+          // Detect an external legacy mutation during the SQL transaction
+          // and ROLLBACK before committing an already-stale SQL snapshot.
+          // This is not a replacement for a cross-process write barrier.
+          if (step == 'after-snapshot' &&
+              LocalSafwaBackup.captureLegacyForCutover(_legacy) != source) {
+            throw StateError('Legacy source changed during cutover');
+          }
+        },
       );
       if (checkpoint != null) await checkpoint('after-commit');
       _cached = Map<String, Object>.from(await _sql.readValues());
