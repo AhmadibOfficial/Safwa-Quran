@@ -54,12 +54,10 @@ git fetch origin
 REVIEW="$HOME/Safwa-Quran-015-review"
 if [ -e "$REVIEW" ] || [ -L "$REVIEW" ]; then
   echo "STOP: Review path already exists; inspect it first."
-else
-  git worktree add --detach "$REVIEW" \
-    origin/feature/safwa-015-transactional-sqlite-foundation
+  exit 1
 fi
-
-# Continue only if the worktree was freshly created or independently verified.
+git worktree add --detach "$REVIEW" \
+  origin/feature/safwa-015-transactional-sqlite-foundation || exit 1
 cd "$REVIEW" || exit 1
 flutter --version
 dart --version
