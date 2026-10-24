@@ -1,6 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart' as ad;
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'safwa_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -142,7 +142,7 @@ class _PrayerTimesPageState extends State<PrayerTimesPage> {
 
   Future<void> load() async {
     try {
-      final p = await SharedPreferences.getInstance();
+      final p = await SafwaPreferences.getInstance();
       if (!mounted) return;
       setState(() {
         final choice = p.getString('safwa_prayer_city');
@@ -164,7 +164,7 @@ class _PrayerTimesPageState extends State<PrayerTimesPage> {
 
   Future<void> save() async {
     try {
-      final p = await SharedPreferences.getInstance();
+      final p = await SafwaPreferences.getInstance();
       if (cityId != null) await p.setString('safwa_prayer_city', cityId!);
       await p.setString('safwa_prayer_method', method.name);
       await p.setString('safwa_prayer_asr', asr.name);
