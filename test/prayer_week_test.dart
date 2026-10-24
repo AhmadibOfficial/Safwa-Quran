@@ -159,6 +159,12 @@ void main() {
       const MaterialApp(home: Scaffold(body: CompanionHub())),
     );
     await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('companion_search')), '7-Day',
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('7-Day Prayer Planner'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('7-Day Prayer Planner'));
     await tester.pumpAndSettle();
     expect(find.text('Plan your Salah week'), findsOneWidget);

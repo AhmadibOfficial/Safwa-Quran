@@ -157,11 +157,12 @@ void main() {
       const MaterialApp(home: Scaffold(body: CompanionHub())),
     );
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Weekly Salah Journal'),
-      180,
-      scrollable: find.byType(Scrollable).first,
+    await tester.enterText(
+      find.byKey(const Key('companion_search')), 'Weekly Salah',
     );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Weekly Salah Journal'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Weekly Salah Journal'));
     await tester.pumpAndSettle();
     expect(find.text('Your private weekly journal'), findsOneWidget);

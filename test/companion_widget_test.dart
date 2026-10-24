@@ -11,7 +11,13 @@ void main() {
   testWidgets('companion hub routes to true-north Qibla page', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: Scaffold(body: CompanionHub())));
     await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('companion_search')), 'Qibla',
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Qibla Direction'), findsOneWidget);
+    await tester.ensureVisible(find.text('Qibla Direction'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Qibla Direction'));
     await tester.pumpAndSettle();
     expect(find.text('Point towards the Kaaba'), findsOneWidget);
