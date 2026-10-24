@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:sqflite_common/sqlite_api.dart';
 import 'package:safwa_quran/companion_core.dart';
 import 'package:safwa_quran/local_backup.dart';
 import 'package:safwa_quran/safwa_cutover.dart';
