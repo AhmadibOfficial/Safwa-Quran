@@ -56,7 +56,9 @@ class SafwaSqliteStore {
           // WAL + FULL reduces loss of committed transactions on devices,
           // subject to the actual platform/filesystem durability behaviour.
           // Never silently continue in an unexpected persistence mode.
-          await database.execute('PRAGMA journal_mode=WAL');
+          // Android's sqflite backend expects journal-mode pragmas via
+          // rawQuery rather than execute when the manifest owns the mode.
+          await database.rawQuery('PRAGMA journal_mode=WAL');
           await database.execute('PRAGMA synchronous=FULL');
         },
         onCreate: (database, version) async {
