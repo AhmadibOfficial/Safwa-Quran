@@ -3,7 +3,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'quran_data.dart';
 import 'prayer_times.dart';
 import 'companion_features.dart';
-void main(){WidgetsFlutterBinding.ensureInitialized();runApp(const SafwaApp());}
+import 'local_backup.dart';
+
+/// Recover interrupted preference restore before any widget reads local data.
+/// Fail closed rather than displaying potentially half-restored settings.
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await const LocalSafwaBackup().recoverPendingRestore();
+    runApp(const SafwaApp());
+  } catch (_) {
+    runApp(const MaterialApp(
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Safwa could not safely recover local preferences. '
+                'Keep your original encrypted backup. Restart the app or '
+                'contact support before attempting another restore.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
+}
 const navy=Color(0xFF142547),cream=Color(0xFFF7F6F2),gold=Color(0xFFAD8744),teal=Color(0xFF187A8B);
 class SafwaApp extends StatelessWidget {
   const SafwaApp({super.key, this.repository = const QuranData()});
