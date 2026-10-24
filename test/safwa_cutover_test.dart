@@ -220,6 +220,8 @@ void main() {
     expect((await sqlite.readActivation()).active, false);
     expect(legacy.getString(LocalSafwaBackup.recoveryKey), '{unresolved}');
     await shutDown();
+    sqlite = SafwaSqliteStore(factory: databaseFactoryFfi, path: path);
+    await sqlite.open();
     await expectLater(
       SafwaCutoverController.openForIsolatedReview(
         legacy: legacy, sqlite: sqlite,
