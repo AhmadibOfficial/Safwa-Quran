@@ -231,6 +231,38 @@ void main() {
     );
   });
 
+  test('failure after marker but before COMMIT rolls back both rows',
+      () async {
+    final before = LocalSafwaBackup.captureLegacyForCutover(legacy);
+    await expectLater(
+      controller!.activateForIsolatedReview(
+        confirmed: true,
+        checkpoint: (step) async {
+          if (step == 'after-marker') {
+            throw StateError('injected failure before SQL COMMIT');
+          }
+        },
+      ),
+      throwsStateError,
+    );
+    expect((await sqlite.readActivation()).active, false);
+    expect(await sqlite.readValues(), isEmpty);
+    expect(LocalSafwaBackup.captureLegacyForCutover(legacy), before);
+    expect((await SafwaPreferences.getInstance()).isSqliteCanonical, false);
+  });
+
+  test('session obtained before review install follows new canonical backend',
+      () async {
+    await shutDown();
+    final original = await SafwaPreferences.getInstance();
+    expect(original.getString('safwa_prayer_city'), 'kaduna');
+    await boot();
+    await controller!.activateForIsolatedReview(confirmed: true);
+    await original.setString('safwa_prayer_city', 'abuja');
+    expect((await sqlite.readValues())['safwa_prayer_city'], 'abuja');
+    expect(legacy.getString('safwa_prayer_city'), 'kaduna');
+  });
+
   test('schema v1 SQLite upgrades to v2 without erasing old snapshot',
       () async {
     final upgradePath = '${scratch.path}/v1-upgrade.sqlite3';
