@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'companion_core.dart';
+import 'companion_directory.dart';
 
 /// A user-controlled, UNENCRYPTED export of local Safwa preferences only.
 ///
@@ -43,6 +44,7 @@ class LocalSafwaBackup {
     'safwa_tasbih_goal',
     'safwa_language',
     'safwa_learning_progress',
+    'safwa_companion_pins',
   };
 
   static const Set<String> _cityIds = {
@@ -130,6 +132,9 @@ class LocalSafwaBackup {
     }
     if (key == 'safwa_learning_progress') {
       return _validList(value, _topics.length, _topics.contains);
+    }
+    if (key == 'safwa_companion_pins') {
+      return _validList(value, companionIds.length, companionIds.contains);
     }
     if (key == 'safwa_prayer_city' && value is String &&
         _cityIds.contains(value)) {
