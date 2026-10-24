@@ -141,8 +141,8 @@ class _SecureBackupPageState extends State<SecureBackupPage> {
       ),
     );
     if (approved != true || !mounted) return;
-    if (inspectedHash != fingerprint()) {
-      notice('Backup changed. Inspect again.');
+    if (inspectedHash != fingerprint() || password.text != secret) {
+      notice('Backup or passphrase changed. Inspect again.');
       return;
     }
     setState(() => busy = true);
@@ -297,8 +297,10 @@ class _SecureBackupPageState extends State<SecureBackupPage> {
         const SizedBox(height: 16),
         const Text(
           'Offline and opt-in only. The previous unencrypted backup '
-          'screen is deprecated. Restore is not transactional and '
-          'an interrupted operation can require an original backup.',
+          'screen is deprecated. A temporary plaintext recovery snapshot '
+          'is stored in on-device preferences during restoration. '
+          'Recovery is best effort, not power-loss-safe or atomic. '
+          'Keep your original encrypted backup.',
         ),
       ],
     ),
