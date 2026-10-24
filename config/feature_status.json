@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-013-companion-search-pins",
+  "development_branch": "feature/safwa-014-restore-recovery-security",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -76,13 +76,18 @@
     },
     {
       "module": "encrypted_backup_accessibility",
-      "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "primary UI routes to passphrase-based Argon2id AES-256-GCM encrypted JSON with authenticating tag, accessible form/announcements; new cryptography dependency needs online pub get + Kali tests"
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "Owner-verified combined SAFWA-013 stack on Kali: 59 Flutter, 11 Quran Python tests, analyzer clear, offline source-only gate PASS (2026-10-24). No standalone isolated SAFWA-012, independent review, CI, or device testing."
     },
     {
       "module": "companion_search_pins",
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "Owner-verified SAFWA-013 stack: 59 Flutter and 11 Quran integrity tests, analyzer clear, source-only gate PASS on Kali. Draft, not merged or production-released."
+    },
+    {
+      "module": "restore_recovery_hardening",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "search 13 existing companion destinations, locally persisted optional pins with accessible result counts, backup-allowlisted; no new services or unlocks; pending Kali tests"
+      "note": "SAFWA-014 adds SharedPreferences undo journal, startup fail-closed replay, per-Surah ayah bounds and fault/adversarial tests. NOT transactional or power-loss-certified; independent AppSec and privacy/accessibility reviews pending."
     }
   ],
   "quran_reader_activation": "BLOCKED",
