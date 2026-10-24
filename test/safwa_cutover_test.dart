@@ -231,6 +231,25 @@ void main() {
     );
   });
 
+  test('unexpected raw legacy mutation during staging aborts cutover',
+      () async {
+    await expectLater(
+      controller!.activateForIsolatedReview(
+        confirmed: true,
+        checkpoint: (step) async {
+          if (step == 'after-snapshot') {
+            await legacy.setString('safwa_prayer_city', 'kano');
+          }
+        },
+      ),
+      throwsStateError,
+    );
+    expect((await sqlite.readActivation()).active, false);
+    expect(await sqlite.readValues(), isEmpty);
+    expect((await SafwaPreferences.getInstance()).isSqliteCanonical, false);
+    expect(legacy.getString('safwa_prayer_city'), 'kano');
+  });
+
   test('failure after marker but before COMMIT rolls back both rows',
       () async {
     final before = LocalSafwaBackup.captureLegacyForCutover(legacy);
