@@ -96,6 +96,21 @@ class OfflineRecitationManifest {
   final List<OfflineRecitationTrack> tracks;
   bool get isLocked => status == 'LOCKED';
 
+  /// Review-only sanity check: each whole-Surah recording must match the
+  /// trusted 114-Surah catalog; this does not verify the audible recitation.
+  void validateChapterCounts(List<int> counts) {
+    if (counts.length != 114 ||
+        counts.any((value) => value <= 0) ||
+        counts.fold<int>(0, (sum, count) => sum + count) != 6236) {
+      throw const FormatException('Unverified Quran chapter catalog');
+    }
+    for (final track in tracks) {
+      if (track.ayahCount != counts[track.surah - 1]) {
+        throw const FormatException('Recitation Ayah count differs from catalog');
+      }
+    }
+  }
+
   factory OfflineRecitationManifest.parse(String text) {
     if (text.length > 200000 || text.isEmpty) {
       throw const FormatException('Invalid offline recitation manifest size');
