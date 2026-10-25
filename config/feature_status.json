@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-015d-device-concurrency-validation",
+  "development_branch": "feature/safwa-016-offline-recitation-foundation",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -51,8 +51,8 @@
     },
     {
       "module": "quran_recitation_audio",
-      "stage": "SOURCE_AND_AUDIO_RIGHTS_LOCKED",
-      "note": "no approved audio files"
+      "stage": "SOURCE_FOUNDATION_PENDING_KALI_AND_AUDIO_RIGHTS_REVIEW",
+      "note": "SAFWA-016 offline recitation: locked manifest, local SHA-256 file verifier, review-only local just_audio player adapter, accessible locked status UI and Python/Dart source gates. No approved reciter/recordings or redistribution permission; no shipping playback; no streaming; scholarly and rights review pending."
     },
     {
       "module": "learning",
@@ -106,8 +106,13 @@
     },
     {
       "module": "device_concurrency_recovery_harness",
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "SAFWA-015D owner-verified exact SHA 13196ae5502a448f3fc5bdad9d22e7eb7f16455e on Kali: 117 Flutter tests, 11 Python Quran integrity tests and analyzer clean. This is NOT physical Android/iOS crash validation, device recovery, cross-process coordination or independent privacy/AppSec approval. Production SQLite disabled."
+    },
+    {
+      "module": "offline_recitation_review_foundation",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-015D (draft): SQLite v3 revision-fenced multi-connection writes; stale controller fails closed; missing/corrupt review database rejection; read-only legacy plaintext retention audit; 11 new source-defined Flutter tests and opt-in manual Android/iOS synthetic interruption harness. 117 Flutter tests and 11 Quran checks EXPECTED, not yet run for this branch. Physical device/crash/storage-full, multi-isolate legacy cutover, privacy deletion and independent reviews PENDING. Production SQLite OFF."
+      "note": "SAFWA-016: 12 Flutter source tests and 3 Python audio release-gate tests newly defined; target 129 Flutter +14 Quran/audio Python checks, unexecuted. Full-file MP3 review foundation only; per-ayah segmentation/downloads/media-device decoder QA pending. Physical-device SAFWA-015D durability validation independently pending."
     }
   ],
   "quran_reader_activation": "BLOCKED",
