@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:safwa_quran/safwa_cutover.dart';
+import 'package:safwa_quran/safwa_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:safwa_quran/local_backup.dart';
 import 'package:safwa_quran/safwa_sqlite_store.dart';
@@ -65,6 +68,46 @@ void main() {
     final after = await secondary!.readCanonicalStateForReview();
     expect(after.revision, result.revision);
     expect(after.values['safwa_tasbih_count'], 11);
+  });
+
+  test('stale review controller faults instead of serving cached data',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'safwa_prayer_city': 'kaduna',
+    });
+    final legacy = await SharedPreferences.getInstance();
+    await primary.activateValidatedLegacy(original, confirmed: true);
+    final controller = await SafwaCutoverController.openForIsolatedReview(
+      legacy: legacy,
+      sqlite: primary,
+    );
+    controller.installForIsolatedReview();
+    try {
+      final staleHandle = await SafwaPreferences.getInstance();
+      secondary = SafwaSqliteStore(
+        factory: databaseFactoryFfi, path: dbPath,
+        requireExistingForReview: true,
+      );
+      await secondary!.open();
+      final current = await secondary!.readCanonicalStateForReview();
+      await secondary!.mutateCanonicalForReview(
+        expectedRevision: current.revision,
+        transform: (values) => <String, Object>{
+          ...values,
+          'safwa_prayer_city': 'abuja',
+        },
+      );
+      await expectLater(
+        staleHandle.setInt('safwa_tasbih_count', 99),
+        throwsStateError,
+      );
+      expect(() => staleHandle.getString('safwa_prayer_city'),
+          throwsStateError);
+      expect((await primary.readCanonicalStateForReview()).values
+          ['safwa_prayer_city'], 'abuja');
+    } finally {
+      controller.detachForIsolatedReview();
+    }
   });
 
   test('canonical writes before activation are denied', () async {
