@@ -281,7 +281,7 @@ void main() {
     expect(legacy.getString('safwa_prayer_city'), 'kaduna');
   });
 
-  test('schema v1 SQLite upgrades to v2 without erasing old snapshot',
+  test('schema v1 SQLite upgrades to v3 without erasing old snapshot',
       () async {
     final upgradePath = '${scratch.path}/v1-upgrade.sqlite3';
     final initialArchive = LocalSafwaBackup.captureLegacyForCutover(legacy);
