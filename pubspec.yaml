@@ -18,6 +18,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Opt-in synthetic device harness only; not invoked by flutter test default.
+  integration_test:
+    sdk: flutter
   flutter_lints: ^5.0.0
   # Desktop/unit-test factory, not wired into mobile production initialization.
   sqflite_common_ffi: '>=2.4.0+3 <2.4.1'
