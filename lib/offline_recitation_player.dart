@@ -20,6 +20,7 @@ class OfflineRecitationReviewPlayer {
     required OfflineRecitationManifest manifest,
     required OfflineRecitationTrack track,
     required Directory isolatedAudioDirectory,
+    required List<int> trustedChapterVerseCounts,
     required bool reviewSessionExplicitlyAuthorized,
   }) async {
     if (_disposed) throw StateError('Audio player has been disposed');
@@ -29,6 +30,7 @@ class OfflineRecitationReviewPlayer {
         safwaPublicRecitationPlaybackEnabled) {
       throw StateError('Unapproved offline recitation is disabled');
     }
+    manifest.validateChapterCounts(trustedChapterVerseCounts);
     _prepared = false;
     await _player.stop();
     final path = await const LocalRecitationFileVerifier()
