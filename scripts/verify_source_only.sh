@@ -26,6 +26,9 @@ echo "===== Offline Quran integrity tests ====="
 python3 -m unittest discover -s scripts/tests -v
 python3 scripts/quran_pipeline.py check
 
+echo '===== Offline recitation audio rights / asset gate ====='
+python3 scripts/check_offline_audio.py
+
 if python3 scripts/quran_pipeline.py release; then
   echo "ERROR: Public release unexpectedly allowed." >&2
   exit 1
