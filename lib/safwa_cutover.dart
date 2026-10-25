@@ -18,12 +18,14 @@ class SafwaCutoverController implements SafwaCutoverPort {
     this._sql,
     this._sqlMode,
     this._cached,
+    this._revision,
   );
 
   final SharedPreferences _legacy;
   final SafwaSqliteStore _sql;
   bool _sqlMode;
   Map<String, Object> _cached;
+  int _revision;
   bool _frozen = false;
   bool _faulted = false;
   bool _closed = false;
@@ -38,11 +40,14 @@ class SafwaCutoverController implements SafwaCutoverPort {
   }) async {
     final state = await sqlite.readActivation();
     if (state.active) {
+      // Canonical source and revision come from one consistent SQL read.
+      final canonical = await sqlite.readCanonicalStateForReview();
       return SafwaCutoverController._(
         legacy,
         sqlite,
         true,
-        Map<String, Object>.from(await sqlite.readValues()),
+        Map<String, Object>.from(canonical.values),
+        canonical.revision,
       );
     }
     if (legacy.containsKey(LocalSafwaBackup.recoveryKey) ||
@@ -54,6 +59,7 @@ class SafwaCutoverController implements SafwaCutoverPort {
       sqlite,
       false,
       <String, Object>{},
+      0,
     );
   }
 
@@ -111,8 +117,19 @@ class SafwaCutoverController implements SafwaCutoverPort {
   @override
   Future<bool> setValue(String key, Object value) => _serialize(() async {
     if (_sqlMode) {
-      await _sql.setPreference(key, value);
-      _cached = Map<String, Object>.from(await _sql.readValues());
+      try {
+        final result = await _sql.mutateCanonicalForReview(
+          expectedRevision: _revision,
+          transform: (values) => <String, Object>{...values, key: value},
+        );
+        _cached = Map<String, Object>.from(result.values);
+        _revision = result.revision;
+      } catch (_) {
+        // Stale writer or disk error must not continue presenting old
+        // in-memory state as if canonical and current.
+        _faulted = true;
+        rethrow;
+      }
       return true;
     }
     if (value is String) return _legacy.setString(key, value);
@@ -126,8 +143,17 @@ class SafwaCutoverController implements SafwaCutoverPort {
   @override
   Future<bool> remove(String key) => _serialize(() async {
     if (_sqlMode) {
-      await _sql.removePreference(key);
-      _cached = Map<String, Object>.from(await _sql.readValues());
+      try {
+        final result = await _sql.mutateCanonicalForReview(
+          expectedRevision: _revision,
+          transform: (values) => <String, Object>{...values}..remove(key),
+        );
+        _cached = Map<String, Object>.from(result.values);
+        _revision = result.revision;
+      } catch (_) {
+        _faulted = true;
+        rethrow;
+      }
       return true;
     }
     return _legacy.remove(key);
@@ -136,23 +162,36 @@ class SafwaCutoverController implements SafwaCutoverPort {
   @override
   Future<int> restoreCanonical(String archive) => _serialize(() async {
     if (!_sqlMode) throw StateError('SQLite is not authoritative');
-    final count = await _sql.restoreValidatedJson(
-      archive,
-      confirmed: true,
-    );
-    _cached = Map<String, Object>.from(await _sql.readValues());
-    return count;
+    final validated = const LocalSafwaBackup().inspect(archive);
+    try {
+      final result = await _sql.mutateCanonicalForReview(
+        expectedRevision: _revision,
+        transform: (_) => validated.validatedValues,
+      );
+      _cached = Map<String, Object>.from(result.values);
+      _revision = result.revision;
+    } catch (_) {
+      _faulted = true;
+      rethrow;
+    }
+    return validated.keyCount;
   });
 
   @override
   Future<int> clearCanonical() => _serialize(() async {
     if (!_sqlMode) throw StateError('SQLite is not authoritative');
     final previousCount = _cached.length;
-    final empty = LocalSafwaBackup.encodeValidatedSnapshot(
-      <String, Object>{},
-    );
-    await _sql.restoreValidatedJson(empty, confirmed: true);
-    _cached = Map<String, Object>.from(await _sql.readValues());
+    try {
+      final result = await _sql.mutateCanonicalForReview(
+        expectedRevision: _revision,
+        transform: (_) => <String, Object>{},
+      );
+      _cached = Map<String, Object>.from(result.values);
+      _revision = result.revision;
+    } catch (_) {
+      _faulted = true;
+      rethrow;
+    }
     return previousCount;
   });
 
@@ -193,7 +232,9 @@ class SafwaCutoverController implements SafwaCutoverPort {
         },
       );
       if (checkpoint != null) await checkpoint('after-commit');
-      _cached = Map<String, Object>.from(await _sql.readValues());
+      final canonical = await _sql.readCanonicalStateForReview();
+      _cached = Map<String, Object>.from(canonical.values);
+      _revision = canonical.revision;
       _sqlMode = true;
     } catch (_) {
       // A committed activation MUST NOT fall back to stale SharedPreferences
