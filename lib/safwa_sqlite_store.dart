@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:sqflite/sqflite.dart' as mobile;
 import 'package:sqflite_common/sqlite_api.dart';
 
@@ -18,15 +20,20 @@ class SafwaSqliteStore {
   SafwaSqliteStore({
     required this.factory,
     required this.path,
+    this.requireExistingForReview = false,
   });
 
   final DatabaseFactory factory;
   final String path;
+
+  /// Review-only missing-file guard. Required for restart validation after
+  /// an already committed activation, never used to authorize live cutover.
+  final bool requireExistingForReview;
   Database? _db;
 
-  // Schema v2 adds a durable single-row activation marker. The marker and
-  // snapshot are updated in ONE SQLite transaction.
-  static const schemaVersion = 2;
+  // Schema v3 adds a transactional revision fence to the v2 activation
+  // record and snapshot. Version 1/2 snapshots are preserved on upgrade.
+  static const schemaVersion = 3;
 
   static Future<void> _createActivationTable(DatabaseExecutor db) async {
     await db.execute('''
@@ -65,9 +72,13 @@ class SafwaSqliteStore {
 
   Future<void> open() async {
     if (_db != null) return;
+    if (requireExistingForReview && !await File(path).exists()) {
+      throw StateError('Expected existing Safwa review database is missing');
+    }
     final db = await factory.openDatabase(
       path,
       options: OpenDatabaseOptions(
+        singleInstance: false,
         version: schemaVersion,
         onConfigure: (database) async {
           // WAL + FULL reduces loss of committed transactions on devices,
@@ -82,7 +93,8 @@ class SafwaSqliteStore {
           await database.execute('''
             CREATE TABLE safwa_snapshot (
               id INTEGER NOT NULL PRIMARY KEY CHECK(id = 1),
-              archive TEXT NOT NULL
+              archive TEXT NOT NULL,
+              revision INTEGER NOT NULL DEFAULT 0 CHECK(revision >= 0)
             )
           ''');
           await database.insert('safwa_snapshot', {
@@ -94,10 +106,18 @@ class SafwaSqliteStore {
           await _createActivationTable(database);
         },
         onUpgrade: (database, oldVersion, newVersion) async {
-          if (oldVersion != 1 || newVersion != schemaVersion) {
+          if (newVersion != schemaVersion ||
+              (oldVersion != 1 && oldVersion != 2)) {
             throw StateError('Unsupported Safwa SQLite schema migration');
           }
-          await _createActivationTable(database);
+          if (oldVersion == 1) {
+            await _createActivationTable(database);
+          }
+          await database.execute(
+            'ALTER TABLE safwa_snapshot '
+            'ADD COLUMN revision INTEGER NOT NULL DEFAULT 0 '
+            'CHECK(revision >= 0)',
+          );
         },
       ),
     );
@@ -111,6 +131,12 @@ class SafwaSqliteStore {
           synchronousValue is! num ||
           synchronousValue.toInt() != 2) {
         throw StateError('SAFWA-015 requires WAL and synchronous=FULL');
+      }
+      // Never silently accept a corrupted database as new legacy data.
+      final integrity = await db.rawQuery('PRAGMA quick_check');
+      if (integrity.length != 1 ||
+          integrity.single.values.single.toString().toLowerCase() != 'ok') {
+        throw StateError('Safwa SQLite quick_check failed');
       }
       // Every open verifies the stored allowlist and SHA-256 checksum.
       const LocalSafwaBackup().inspect(await _readArchive(db));
@@ -209,6 +235,90 @@ class SafwaSqliteStore {
     });
   }
 
+  /// Read one consistent snapshot and revision from an activated database.
+  /// Every test/review writer must use this revision as an optimistic fence.
+  /// Reads through cached synchronous gateway objects are NOT cross-isolate
+  /// coherent; production cannot activate until that is addressed.
+  Future<({int revision, Map<String, Object> values})>
+      readCanonicalStateForReview() async {
+    return _opened.transaction((txn) async {
+      if (!(await _readActivation(txn)).active) {
+        throw StateError('Canonical SQLite has not been activated');
+      }
+      final revision = await _readRevision(txn);
+      final archive = await _readArchive(txn);
+      return (
+        revision: revision,
+        values: const LocalSafwaBackup().inspect(archive).validatedValues,
+      );
+    });
+  }
+
+  static Future<int> _readRevision(DatabaseExecutor executor) async {
+    final rows = await executor.query(
+      'safwa_snapshot',
+      columns: ['revision'],
+      where: 'id = ?',
+      whereArgs: [1],
+      limit: 1,
+    );
+    if (rows.length != 1 || rows.single['revision'] is! int ||
+        (rows.single['revision']! as int) < 0) {
+      throw StateError('Missing or invalid Safwa writer revision');
+    }
+    return rows.single['revision']! as int;
+  }
+
+  /// Atomic read/validate/compare-and-swap/write across independent SQLite
+  /// connections. A stale writer is REJECTED, never merged blindly.
+  /// Review-only until cross-isolate read invalidation and OS bootstrapping
+  /// are independently tested and approved.
+  Future<({int revision, Map<String, Object> values})>
+      mutateCanonicalForReview({
+    required int expectedRevision,
+    required Map<String, Object> Function(Map<String, Object>) transform,
+    Future<void> Function()? testBeforeCommit,
+  }) async {
+    if (expectedRevision < 0) {
+      throw const FormatException('Invalid writer revision');
+    }
+    return _opened.transaction((txn) async {
+      if (!(await _readActivation(txn)).active) {
+        throw StateError('Refusing canonical write before activation');
+      }
+      final revision = await _readRevision(txn);
+      if (revision != expectedRevision) {
+        throw StateError('Stale SQLite writer: refresh before retrying');
+      }
+      final before = const LocalSafwaBackup()
+          .inspect(await _readArchive(txn)).validatedValues;
+      final next = transform(Map<String, Object>.from(before));
+      final archive = LocalSafwaBackup.encodeValidatedSnapshot(next);
+      final changed = await txn.update(
+        'safwa_snapshot',
+        {'archive': archive, 'revision': revision + 1},
+        where: 'id = ? AND revision = ?',
+        whereArgs: [1, revision],
+      );
+      if (changed != 1) {
+        throw StateError('SQLite writer revision changed');
+      }
+      await testBeforeCommit?.call();
+      return (
+        revision: revision + 1,
+        values: const LocalSafwaBackup().inspect(archive).validatedValues,
+      );
+    });
+  }
+
+  static Future<void> _requireNotActivated(Transaction txn) async {
+    if ((await _readActivation(txn)).active) {
+      throw StateError(
+        'Unfenced write refused: SQLite already canonical',
+      );
+    }
+  }
+
   /// Returns a validated snapshot. It never includes reader-release policy,
   /// reviewer records, Quran text, unknown future keys or other-app secrets.
   Future<Map<String, Object>> readValues() async {
@@ -220,6 +330,7 @@ class SafwaSqliteStore {
 
   Future<void> setPreference(String key, Object value) async {
     await _opened.transaction((txn) async {
+      await _requireNotActivated(txn);
       final previous = const LocalSafwaBackup()
           .inspect(await _readArchive(txn)).validatedValues;
       final updated = <String, Object>{...previous, key: value};
@@ -232,6 +343,7 @@ class SafwaSqliteStore {
 
   Future<void> removePreference(String key) async {
     await _opened.transaction((txn) async {
+      await _requireNotActivated(txn);
       final previous = const LocalSafwaBackup()
           .inspect(await _readArchive(txn)).validatedValues;
       if (!previous.containsKey(key)) return;
@@ -271,6 +383,7 @@ class SafwaSqliteStore {
       checked.validatedValues,
     );
     await _opened.transaction((txn) async {
+      await _requireNotActivated(txn);
       await _writeArchive(txn, serialized);
       await testCheckpointBeforeCommit?.call();
     });
@@ -311,6 +424,7 @@ class SafwaSqliteStore {
       inspected.validatedValues,
     );
     await _opened.transaction((txn) async {
+      await _requireNotActivated(txn);
       final existing = const LocalSafwaBackup()
           .inspect(await _readArchive(txn)).validatedValues;
       if (existing.isNotEmpty) {
