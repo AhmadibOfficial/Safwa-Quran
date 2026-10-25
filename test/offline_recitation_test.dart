@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:safwa_quran/offline_recitation.dart';
 import 'package:safwa_quran/offline_recitation_page.dart';
+import 'package:safwa_quran/quran_data.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -116,6 +117,25 @@ void main() {
     expect(parsed.tracks.single.ayahCount, 7);
     expect(parsed.tracks.single.fileName, '001_review_reciter.mp3');
     expect(safwaPublicRecitationPlaybackEnabled, false);
+  });
+
+  test('synthetic whole-Surah descriptor matches the chapter catalog',
+      () async {
+    final chapters = await const QuranData().chapters();
+    final counts = chapters.map((entry) => entry.verseCount).toList();
+    final parsed = OfflineRecitationManifest.parse(manifest());
+    expect(() => parsed.validateChapterCounts(counts), returnsNormally);
+  });
+
+  test('recitation with incorrect Ayah count fails catalog cross-check',
+      () async {
+    final chapters = await const QuranData().chapters();
+    final counts = chapters.map((entry) => entry.verseCount).toList();
+    final forged = sampleTrack()..['ayah_count'] = 8;
+    final parsed = OfflineRecitationManifest.parse(
+      manifest(tracks: [forged]),
+    );
+    expect(() => parsed.validateChapterCounts(counts), throwsFormatException);
   });
 
   test('offline verifier hashes only an isolated exact local file', () async {
