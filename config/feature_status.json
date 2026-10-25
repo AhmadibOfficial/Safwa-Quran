@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-015c-controlled-cutover",
+  "development_branch": "feature/safwa-015d-device-concurrency-validation",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -91,8 +91,8 @@
     },
     {
       "module": "sqlite_transactional_foundation",
-      "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-015 isolated file-backed SQLite adapter + 9 FFI and 5 copy-only migration rehearsal tests committed. NOT executed on Kali; new code unverified. Legacy SharedPreferences all still live. Automated migration rehearsal checks allowlisted hashes and source stability but does not cut over or delete data. Full consumer migration, physical-device crash tests and independent reviews pending."
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "SAFWA-015 SQLite parent stack verified on Kali via SAFWA-015C exact SHA ddbae89a2fe5b43e64c298313891b7d69a30ab76: 106 Flutter tests, 11 Quran Python tests, zero analyzer issues. This does not validate physical durability or production activation."
     },
     {
       "module": "preference_gateway",
@@ -101,8 +101,13 @@
     },
     {
       "module": "controlled_sqlite_cutover_rehearsal",
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "SAFWA-015C owner-verified Kali source-only gate PASS at exact SHA ddbae89a2fe5b43e64c298313891b7d69a30ab76: 106 Flutter tests, 11 Quran integrity checks, zero analyzer issues. Experimental in-process cutover only; physical device, cross-isolate, privacy and independent review gates blocked."
+    },
+    {
+      "module": "device_concurrency_recovery_harness",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-015C: experimental in-process cutover controller with SQLite v2 activation marker committed atomically with full snapshot, freeze barrier, stale-session redirection, fail-closed reboot selection, SQL backup restore and canonical SQL privacy erasure; 15 new regression tests defined, not yet run. No shipping activation. Cross-isolate, device crashes, plaintext-retention privacy and independent security review pending."
+      "note": "SAFWA-015D (draft): SQLite v3 revision-fenced multi-connection writes; stale controller fails closed; missing/corrupt review database rejection; read-only legacy plaintext retention audit; 11 new source-defined Flutter tests and opt-in manual Android/iOS synthetic interruption harness. 117 Flutter tests and 11 Quran checks EXPECTED, not yet run for this branch. Physical device/crash/storage-full, multi-isolate legacy cutover, privacy deletion and independent reviews PENDING. Production SQLite OFF."
     }
   ],
   "quran_reader_activation": "BLOCKED",
