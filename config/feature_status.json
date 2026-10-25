@@ -112,7 +112,7 @@
     {
       "module": "offline_recitation_review_foundation",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-016: 12 Flutter source tests and 3 Python audio release-gate tests newly defined; target 129 Flutter +14 Quran/audio Python checks, unexecuted. Full-file MP3 review foundation only; per-ayah segmentation/downloads/media-device decoder QA pending. Physical-device SAFWA-015D durability validation independently pending."
+      "note": "SAFWA-016: 14 Flutter source tests and 3 Python audio release-gate tests newly defined; target 131 Flutter +14 Quran/audio Python checks, unexecuted. Full-file MP3 review foundation only; per-ayah segmentation/downloads/media-device decoder QA pending. Physical-device SAFWA-015D durability validation independently pending."
     }
   ],
   "quran_reader_activation": "BLOCKED",
