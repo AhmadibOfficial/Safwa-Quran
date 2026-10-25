@@ -4,6 +4,7 @@ import 'quran_data.dart';
 import 'prayer_times.dart';
 import 'companion_features.dart';
 import 'local_backup.dart';
+import 'offline_recitation_page.dart';
 
 /// Recover interrupted preference restore before any widget reads local data.
 /// Fail closed rather than displaying potentially half-restored settings.
@@ -110,6 +111,24 @@ class _QuranHomeState extends State<QuranHome>{
           const SizedBox(height:14),
           FilledButton.icon(onPressed:()=>setState(()=>tab=1),
             icon:const Icon(Icons.menu_book_outlined),label:const Text('Explore the Quran')),
+        ]))),
+        const SizedBox(height:14),
+        Card(child:Padding(padding:const EdgeInsets.all(20),child:Column(
+          crossAxisAlignment:CrossAxisAlignment.start,children:[
+          const Text('OFFLINE RECITATION',style:TextStyle(
+            color:gold,fontWeight:FontWeight.w700)),
+          const SizedBox(height:8),
+          const Text('Listen without internet',style:TextStyle(
+            color:navy,fontSize:20,fontWeight:FontWeight.w700)),
+          const SizedBox(height:8),
+          const Text('Recorded recitations remain unavailable until '
+            'rights and independent audio reviews are approved.'),
+          const SizedBox(height:12),
+          OutlinedButton.icon(
+            onPressed:()=>Navigator.of(context).push(MaterialPageRoute<void>(
+              builder:(_)=>const OfflineRecitationPage())),
+            icon:const Icon(Icons.headphones_outlined),
+            label:const Text('Offline recitation status')),
         ]))),
         const SizedBox(height:14),
         Card(child:Padding(padding:const EdgeInsets.all(20),
