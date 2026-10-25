@@ -1,6 +1,6 @@
 # Safwa Quran | صفوة القرآن
 
-An offline-first Flutter Quran application. Project of Safwa Institute; logo usage authorized by project owner.
+An offline Quran application. Project of Safwa Institute; logo usage authorized by Safwa Stuios.
 
 **Status:** SAFWA-003 implementation in progress. Public release is BLOCKED until verified Quran source, two independent scholarly/content reviews, licensed attribution, and Flutter/device/security testing are complete. Never substitute generated verses.
 
