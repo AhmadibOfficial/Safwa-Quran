@@ -21,9 +21,9 @@ This branch does not change `main.dart` and DOES NOT install or enable a product
 
 ### New synthetic local tests (NOT EXECUTED)
 
-- `test/safwa_015d_concurrency_test.dart` — 7 new FFI cases: two independent SQL connections reject stale writes, preactivation write guard, postactivation unfenced API rejection, deterministic transaction failure with complete rollback, existing-only missing DB rejection, corrupt snapshot fails closed without erasure, schema-v2 upgrade preserves content.
+- `test/safwa_015d_concurrency_test.dart` — 8 new FFI cases: two independent SQL connections reject stale writes, stale review controller locks rather than serving old cached values, preactivation write guard, postactivation unfenced API rejection, deterministic transaction failure with complete rollback, existing-only missing DB rejection, corrupt snapshot fails closed without erasure, schema-v2 upgrade preserves content.
 - `test/safwa_015d_retention_test.dart` — 3 new FFI cases: refusal before activation, unchanged retained shadow with no erase authority, postactivation divergence and undo-journal failure guard.
-- Original SAFWA-015C 15 cutover tests and preceding suites remain unchanged except for version-name label updates. **Expected full Flutter count: 116** (106 verified inherited + 10 unexecuted), plus **11 Python Quran tests**. This is a target, **not a passing result**.
+- Original SAFWA-015C 15 cutover tests and preceding suites remain unchanged except for version-name label updates. **Expected full Flutter count: 117** (106 verified inherited + 11 unexecuted), plus **11 Python Quran tests**. This is a target, **not a passing result**.
 
 ## Disposable Android/iOS operator harness (NOT RUN)
 
