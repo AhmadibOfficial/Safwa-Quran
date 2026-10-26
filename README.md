@@ -1,6 +1,6 @@
 # Safwa Quran | صفوة القرآن
 
-**An offline-first Quran and daily worship companion — under active development.**
+**An offline Quran and daily worship companion — under active development.**
 
 Safwa Quran is an independent software initiative initiated by **Ahmad Ibrahim** to explore a dependable, accessible, source-conscious Islamic mobile experience. It aims to bring Quran reading, offline recitation, prayer planning, and useful worship tools together in one thoughtfully engineered application.
 
@@ -12,7 +12,7 @@ Safwa Quran is an independent software initiative initiated by **Ahmad Ibrahim**
 
 | Area | Current position |
 | --- | --- |
-| Product | Offline-first Quran and Islamic companion application |
+| Product | Offline Quran and Islamic companion application |
 | Project initiator | Ahmad Ibrahim |
 | Potential institutional collaboration | Safwa Studios — exploratory discussion, **no agreement signed** |
 | Technology | Flutter / Dart; local preferences; experimental SQLite review adapter |
