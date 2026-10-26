@@ -58,7 +58,7 @@ The source implementation currently uses an **empty, locked audio manifest**; it
 
 The current feature branches contain a Flutter application, offline Quran source verification, local-first preference and recovery tools, and focused test suites.
 
-\`\`\`text
+```text
 lib/                    Flutter screens, companion tools, storage and review adapters
 assets/data/            Surah catalog, content-activation controls, locked audio manifest
 sources/review_only/     Quarantined source material; not approved for app publication
@@ -68,7 +68,7 @@ test/                   Unit, widget, migration and adversarial tests
 integration_test/       Operator-controlled synthetic device test harness
 docs/                   Technical acceptance and recovery procedures
 .github/workflows/      Source-only quality workflows
-\`\`\`
+```
 
 **Storage boundary:** The live prototype continues to use its existing preferences path. SQLite migration, cross-isolate consistency, legacy data retention/erasure, WAL recovery and real process-kill durability are subject to separate gates. The tests do not establish that a production cutover is safe.
 
@@ -80,9 +80,9 @@ Testing evidence below comes from **owner-provided Kali Linux terminal logs**, n
 
 | Milestone | Exact locally tested commit | Source-only result |
 | --- | --- | --- |
-| [SAFWA-015C — controlled SQLite cutover rehearsal](https://github.com/AhmadibOfficial/Safwa-Quran/pull/19) | \`ddbae89a2fe5b43e64c298313891b7d69a30ab76\` | 106 Flutter / 11 Python; analyzer clean |
-| [SAFWA-015D — concurrency and recovery harness](https://github.com/AhmadibOfficial/Safwa-Quran/pull/20) | \`13196ae5502a448f3fc5bdad9d22e7eb7f16455e\` | 117 Flutter / 11 Python; analyzer clean |
-| [SAFWA-016 — offline recitation foundation](https://github.com/AhmadibOfficial/Safwa-Quran/pull/21) | \`01c00f1424508ffa0f4c19639459527aa55859dd\` | **131 Flutter / 14 Python; analyzer clean** |
+| [SAFWA-015C — controlled SQLite cutover rehearsal](https://github.com/AhmadibOfficial/Safwa-Quran/pull/19) | `ddbae89a2fe5b43e64c298313891b7d69a30ab76` | 106 Flutter / 11 Python; analyzer clean |
+| [SAFWA-015D — concurrency and recovery harness](https://github.com/AhmadibOfficial/Safwa-Quran/pull/20) | `13196ae5502a448f3fc5bdad9d22e7eb7f16455e` | 117 Flutter / 11 Python; analyzer clean |
+| [SAFWA-016 — offline recitation foundation](https://github.com/AhmadibOfficial/Safwa-Quran/pull/21) | `01c00f1424508ffa0f4c19639459527aa55859dd` | **131 Flutter / 14 Python; analyzer clean** |
 
 All three pull requests are **draft and unmerged**. The quoted results apply to their **exact source commits** and do not validate hardware or subsequent edits.
 
@@ -101,7 +101,7 @@ All three pull requests are **draft and unmerged**. The quoted results apply to 
 
 ## Repository navigation
 
-**The default \`main\` branch currently hosts this project overview.** The application and engineering work are in staged, unmerged branches; reviewers should not assume the default branch contains the latest Flutter source.
+**The default `main` branch currently hosts this project overview.** The application and engineering work are in staged, unmerged branches; reviewers should not assume the default branch contains the latest Flutter source.
 
 - **[Latest development branch — SAFWA-016](https://github.com/AhmadibOfficial/Safwa-Quran/tree/feature/safwa-016-offline-recitation-foundation)** — source-only app and offline audio foundation.
 - **[SAFWA-016 draft PR #21](https://github.com/AhmadibOfficial/Safwa-Quran/pull/21)** — code changes, test scope and latest owner verification evidence.
@@ -113,7 +113,7 @@ All three pull requests are **draft and unmerged**. The quoted results apply to 
 
 These commands assume a **new checkout**, with no existing local changes to preserve. Flutter with a compatible Dart SDK, Git and Python 3 are required. This setup does **not** create Android/iOS platform folders, perform a native build or authorize device installation.
 
-\`\`\`bash
+```bash
 git clone https://github.com/AhmadibOfficial/Safwa-Quran.git
 cd Safwa-Quran
 git fetch origin
@@ -125,17 +125,17 @@ flutter test --concurrency=1
 python3 -m unittest discover -s scripts/tests -v
 python3 scripts/quran_pipeline.py check
 python3 scripts/check_offline_audio.py
-\`\`\`
+```
 
 For the documented full source-only gate:
 
-\`\`\`bash
+```bash
 bash scripts/verify_source_only.sh --offline
-\`\`\`
+```
 
 **Expected behavior:** The script intentionally tests that public release is **rejected** while mandatory approvals are incomplete. Its source-only PASS does not mean the Quran reader, audio or app release is authorized.
 
-**Existing developer checkouts:** Do not run destructive cleanup (\`git clean\`, \`git reset --hard\`, \`flutter clean\`) or overwrite uncommitted source files, platform projects, local databases or worktrees. Review branch changes in a separate worktree instead.
+**Existing developer checkouts:** Do not run destructive cleanup (`git clean`, `git reset --hard`, `flutter clean`) or overwrite uncommitted source files, platform projects, local databases or worktrees. Review branch changes in a separate worktree instead.
 
 ## Proposed collaboration with Safwa Studios
 
