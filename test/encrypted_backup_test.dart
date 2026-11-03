@@ -6,7 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:safwa_quran/encrypted_backup.dart';
 import 'package:safwa_quran/secure_backup_page.dart';
 
-const testPassword = 'a long passphrase for Safwa #2026';
+// Synthetic-only passphrase. Never use a real account or backup password here.
+const testPassword = 'synthetic_backup_fixture_not_a_real_password_2026';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
