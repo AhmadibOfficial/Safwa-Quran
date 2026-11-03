@@ -26,6 +26,10 @@ echo "===== Offline Quran integrity tests ====="
 python3 -m unittest discover -s scripts/tests -v
 python3 scripts/quran_pipeline.py check
 
+echo '===== AI confidentiality, release, and dependency gates ====='
+python3 scripts/security/check_repo_security.py
+python3 scripts/security/check_dependency_policy.py
+
 echo '===== Offline recitation audio rights / asset gate ====='
 python3 scripts/check_offline_audio.py
 

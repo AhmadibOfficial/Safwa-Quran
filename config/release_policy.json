@@ -2,7 +2,7 @@
   "public_release_enabled": false,
   "content_lock_approved": false,
   "independent_religious_review_approved": false,
-  "brand_rights_confirmed": true,
+  "brand_rights_confirmed": false,
   "privacy_security_review_approved": false,
   "store_metadata_review_approved": false
 }

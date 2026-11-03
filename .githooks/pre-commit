@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# SAFWA-017. Install manually; this hook must never auto-run or touch production.
+set -Eeuo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+python3 scripts/security/check_repo_security.py --staged
+python3 scripts/security/check_dependency_policy.py
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "BLOCKED: gitleaks is required for this pre-commit check." >&2
+  echo "Install the reviewed Gitleaks CLI before committing." >&2
+  exit 1
+fi
+
+# Current Gitleaks v8 syntax: staged DIFF, not all filesystem data.
+# --redact prevents raw credential values from appearing in logs.
+gitleaks git --staged --redact --no-banner
+
+echo "PASS: Safwa staged paths and Gitleaks secret checks"

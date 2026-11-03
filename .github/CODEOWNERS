@@ -1,0 +1,7 @@
+# SAFWA-017 proposed code ownership for required GitHub reviews.
+# CODEOWNERS does not enforce review without an owner-configured ruleset.
+* @AhmadibOfficial
+.github/workflows/ @AhmadibOfficial
+config/ @AhmadibOfficial
+scripts/security/ @AhmadibOfficial
+.claude/ @AhmadibOfficial

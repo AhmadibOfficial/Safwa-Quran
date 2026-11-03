@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "blockReadsOutsideWorkingDirectories": true,
+    "disableBypassPermissionsMode": true,
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./secrets/**)",
+      "Read(./credentials/**)",
+      "Read(./private/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.p8)",
+      "Read(./**/*.pfx)",
+      "Read(./**/google-services.json)",
+      "Read(./**/GoogleService-Info.plist)",
+      "Read(./**/*service-account*.json)",
+      "Read(./**/*.db)",
+      "Read(./**/*.sqlite*)",
+      "Read(./**/*.log)",
+      "Read(./**/*.har)",
+      "Read(./**/*.backup)",
+      "Edit(./.claude/**)",
+      "Bash(git push *)",
+      "Bash(git clean *)",
+      "Bash(git reset --hard *)",
+      "Bash(rm -rf *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh release *)",
+      "Bash(flutter build *)",
+      "Bash(gh workflow run *)"
+    ],
+    "ask": [
+      "Bash(git commit *)",
+      "Bash(git add *)"
+    ]
+  }
+}

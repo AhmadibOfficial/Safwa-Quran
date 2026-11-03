@@ -1,0 +1,31 @@
+# SAFWA-017: reviewed local rule pack. No remote rules or repository upload.
+# These signatures are defense-in-depth, not a comprehensive security audit.
+rules:
+  - id: safwa-dart-insecure-tls-override
+    languages: [dart]
+    severity: ERROR
+    message: "Do not globally replace trusted TLS verification in Safwa."
+    pattern-regex: 'HttpOverrides\.global\s*='
+    paths:
+      include: ["lib/**"]
+  - id: safwa-dart-accept-all-certificates
+    languages: [dart]
+    severity: ERROR
+    message: "Do not bypass certificate validation with an always-true callback."
+    pattern-regex: 'badCertificateCallback\s*=.*=>\s*true'
+    paths:
+      include: ["lib/**"]
+  - id: safwa-dart-unsafe-shell
+    languages: [dart]
+    severity: ERROR
+    message: "Avoid launching host shells from the application."
+    pattern-regex: 'Process\.(run|start)\s*\(\s*[\x22\x27](/bin/sh|sh|bash)[\x22\x27]'
+    paths:
+      include: ["lib/**"]
+  - id: safwa-dart-raw-sql-interpolation
+    languages: [dart]
+    severity: ERROR
+    message: "Do not interpolate untrusted values into raw SQL; bind query parameters."
+    pattern-regex: 'raw(Query|Insert|Update|Delete)\s*\(\s*[\x22\x27][^\n]*\$\{?[a-zA-Z_]'
+    paths:
+      include: ["lib/**"]

@@ -77,11 +77,16 @@ def check():
     audit_review_candidate()
     activation=json.loads(ACT.read_text(encoding="utf-8"))
     policy=json.loads(RELEASE.read_text(encoding="utf-8"))
-    if policy.get("brand_rights_confirmed") is not True:
-        raise IntegrityError("Brand rights not recorded")
+    # Source-only verification is allowed while brand permission remains
+    # pending. This is NOT an authorization to activate or distribute content.
+    # A recorded TRUE must only be set after independent written evidence.
+    if not isinstance(policy.get("brand_rights_confirmed"), bool):
+        raise IntegrityError("Brand rights policy must be an explicit boolean")
     if activation.get("quran_reader_enabled") is True:
         if activation.get("review_status")!="approved":
             raise IntegrityError("Unreviewed Quran content activated")
+        if policy["brand_rights_confirmed"] is not True:
+            raise IntegrityError("Unapproved brand cannot activate Quran reader")
         reviews=activation.get("review_evidence",[])
         if len(set(reviews))<2 or not all(isinstance(r,str) and r.strip() for r in reviews):
             raise IntegrityError("Two independent reviews required")
@@ -160,7 +165,7 @@ def main():
     args=p.parse_args()
     try:
         if args.command=="check":
-            check();print("PASS: 114 Surahs, 6236 counts, fail-closed Quran and brand policy")
+            check();print("PASS: 114 Surahs, 6236 counts, fail-closed Quran policy; brand approval is release-gated")
         elif args.command=="release":
             release_check();print("PASS: release")
         else:

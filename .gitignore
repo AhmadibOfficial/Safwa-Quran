@@ -1,9 +1,71 @@
+# Generated Flutter / Python artifacts
 .dart_tool/
 .flutter-plugins*
 build/
 .staging/
 coverage/
+__pycache__/
+*.pyc
+
+# Personal IDE / machine state
+.idea/
+.vscode/settings.json
+.DS_Store
+*.log
+logs/
+*.trace
+*.har
+crashdumps/
+temp/
+tmp/
+
+# Safwa secrets and per-developer environment
 .env
+.env.*
+!.env.example
+!.env.*.example
+secrets/
+private/
+credentials/
+*.secret
+*.secrets
+*.token
+*.credentials
+*service-account*.json
+*service_account*.json
+google-services.json
+GoogleService-Info.plist
+firebase-adminsdk*.json
+key.properties
 *.keystore
 *.jks
-__pycache__/
+*.p8
+*.p12
+*.pfx
+*.pem
+*.key
+id_rsa
+id_ed25519
+*.mobileprovision
+*.provisionprofile
+
+# Data exports, recovery artifacts and synthetic device state
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-shm
+*.db-wal
+*.sqlite-shm
+*.sqlite-wal
+*.bak
+*.backup
+*.dump
+*private-backup*.json
+*recovery-journal*.json
+*.sarif
+
+# Preserve real source and manifests; do NOT ignore tracked Quran
+# source-candidate data. Use review-only synthetic fixtures for AI.
+# pubspec.lock is deliberately not ignored: if formally approved,
+# the app dependency graph should be committed after review.

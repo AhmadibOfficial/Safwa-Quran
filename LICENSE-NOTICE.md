@@ -1,6 +1,6 @@
 # Safwa Institute and Tanzil Quran content rights
 
-Safwa Institute logo use confirmed by project owner on 2026-10-18. High-resolution logo file not yet bundled.
+Safwa Institute name/logo use is **not authorized for publication** as of this milestone. Safwa Studios has offered to explore a formal collaboration; this is not a written branding license or partnership. Do not distribute institutional branding without written approval from the rights holder.
 
 Original Tanzil Uthmani Quran Text (Version 1.1) is licensed **Creative Commons Attribution 3.0**. The sacred Quran text must be copied verbatim, NOT edited. Credit Tanzil Project and link https://tanzil.net/ . See https://tanzil.net/docs/text_license .
 

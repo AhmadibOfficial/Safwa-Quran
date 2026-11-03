@@ -1,0 +1,65 @@
+name: Safwa AI Security and Confidentiality Gates
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'feature/**']
+  workflow_dispatch:
+
+# Never grant write access, environment secrets, production deploys or OIDC.
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    name: Restricted files and release policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Fail closed on sensitive paths and premature releases
+        run: python3 scripts/security/check_repo_security.py
+      - name: Direct dependency allowlist validation
+        run: python3 scripts/security/check_dependency_policy.py
+      - name: Python policy regression tests
+        run: python3 -m unittest discover -s scripts/tests -v
+
+  secrets:
+    name: Gitleaks Git-history scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # v3 pinned to reviewed Git commit. Personal-account repo; no
+      # organization license or extra provider credentials should be needed.
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+  dart-sast:
+    name: Local Semgrep Flutter/Dart security rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install reviewed pinned scanner in isolated environment
+        shell: bash
+        run: |
+          python3 -m venv "$RUNNER_TEMP/safwa-sast"
+          "$RUNNER_TEMP/safwa-sast/bin/python" -m pip install --disable-pip-version-check "semgrep==1.183.0"
+      - name: Static security analysis (no cloud rules/telemetry)
+        shell: bash
+        run: |
+          "$RUNNER_TEMP/safwa-sast/bin/semgrep" scan \
+            --config .semgrep/safwa-security.yml \
+            --metrics=off --disable-version-check --error --strict \
+            lib/

@@ -1,0 +1,22 @@
+# Defense-in-depth for supported IDE AI context indexing; NOT a sandbox.
+.env
+.env.*
+secrets/**
+credentials/**
+private/**
+**/*.pem
+**/*.key
+**/*.jks
+**/*.keystore
+**/*.p12
+**/*.p8
+**/*.pfx
+**/google-services.json
+**/GoogleService-Info.plist
+**/*service-account*.json
+**/*.db
+**/*.sqlite*
+**/*.log
+**/*.har
+**/*.backup
+.staging/**
