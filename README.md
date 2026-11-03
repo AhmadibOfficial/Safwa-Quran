@@ -10,5 +10,16 @@ SAFWA-003: 114-surah offline directory, search, reading interface, persisted Sur
 4. Run `python3 scripts/quran_pipeline.py check`.
 5. On a trusted internet-connected machine, generate a quarantined Tanzil candidate via `python3 scripts/quran_pipeline.py acquire --out .staging/tanzil`.
 
+## AI-assisted development and confidentiality
+
+This branch includes draft **SAFWA-017** security safeguards for Claude Code, Codex and other AI-assisted engineering:
+
+- [AI confidentiality and secure development policy](docs/AI-CONFIDENTIALITY-AND-SECURE-DEVELOPMENT.md)
+- [Agent workspace policy](AGENTS.md)
+- [Read-only Gitleaks and Semgrep CI](.github/workflows/ai-security.yml)
+- [Direct dependency review baseline](config/dependency_review_baseline.json)
+
+The safeguards do **not** authorize any release or guarantee hosted AI providers' retention/training policies. Sensitive code and data require an approved provider agreement and an OS-level workspace sandbox. `brand_rights_confirmed` remains **false** until written authorization is received. Existing SAFWA-016 source-only test evidence does not validate SAFWA-017.
+
 ## Release policy
 Arabic Quran verses must never be invented. Validate source SHA, counts and exact characters against trusted independent data and secure two separate reviews before approving `assets/data/quran_verified.json`. Never activate by merely changing flags. Release remains disabled pending security, copyright, religious, and device checks.
