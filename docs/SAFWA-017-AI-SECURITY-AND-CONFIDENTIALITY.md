@@ -67,6 +67,14 @@ The final source-only verifier still requires the existing Flutter SDK/cache. Ne
 - Quran text remains gated by 2 independent qualified Hafs reviewers (**0/2**). Public release blocked.
 - **Brand-rights conflict:** source policy's historical `brand_rights_confirmed: true` is inconsistent with Safwa Studios' proposal, which is not a license. It was intentionally **not** changed here to avoid changing inherited Quran verification behavior without a separate reviewed migration. Owner must resolve before any release, and should not rely on this flag for permission.
 
+## Owner Kali first-run finding and remediation
+
+The original SAFWA-017 commit `1c31e51f537079f926cf450685e52fc89088cb63` **failed** immediately at `python3 scripts/ai_security_preflight.py`, which flagged a long `testPassword` value in `test/encrypted_backup_test.dart`. The command exited before Python test discovery, Flutter dependency resolution, analysis, and source-only verification. **No test pass is claimed for that run.**
+
+The next draft revision replaces only that reused test passphrase with a visibly synthetic fixture; it does not modify the encryption/restore implementation. It also changes the preflight to require synthetic-value **prefixes**, rather than permitting a dangerous string merely because it contains the word `synthetic`. Two new Python regression tests cover these cases.
+
+**Acceptance target after remediation, not a tested result:** 131 Flutter tests, 20 Python tests (14 inherited + 6 new security checks), clean Dart analysis and tracked-source preflight. Actual Gitleaks/CI SAST status must be reviewed separately. Preserve the original review worktree and run the revised SHA in a **new** isolated worktree; do not overwrite, clean or reset any previous directory.
+
 ## Acceptance before merge
 
 - [ ] Owner runs Python tests, tracked-file preflight, Flutter source-only gate and Bash syntax on Kali.
