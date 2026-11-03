@@ -22,6 +22,16 @@ class SafwaAIPolicyTests(unittest.TestCase):
         self.assertTrue(suspicious_assignment(b'api_' + b'key = "test_real_credential_not_for_use"'))
         self.assertTrue(suspicious_assignment(b'pass' + b'word: "a_long_secret_for_testing"'))
 
+    def test_real_looking_value_with_embedded_fixture_marker_is_rejected(self):
+        self.assertTrue(suspicious_assignment(
+            b'api_' + b'key = "privatelookingvaluesynthetic_suffix_123"'
+        ))
+
+    def test_explicitly_synthetic_backup_password_is_allowed(self):
+        self.assertFalse(suspicious_assignment(
+            b'const testPassword = "synthetic_backup_fixture_not_a_real_password_2026"'
+        ))
+
     def test_redacted_synthetic_values_are_allowed(self):
         self.assertFalse(suspicious_assignment(b'api_key = "synthetic_api_key"'))
         self.assertFalse(suspicious_assignment(b'password: "replace_me_only"'))
