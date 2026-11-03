@@ -1,7 +1,7 @@
 {
   "project": "Safwa Quran | صفوة القرآن",
   "release_authorized": false,
-  "development_branch": "feature/safwa-016-offline-recitation-foundation",
+  "development_branch": "feature/safwa-017-ai-confidentiality-hardening",
   "requires_kali_flutter_validation": true,
   "core": [
     {
@@ -51,8 +51,8 @@
     },
     {
       "module": "quran_recitation_audio",
-      "stage": "SOURCE_FOUNDATION_PENDING_KALI_AND_AUDIO_RIGHTS_REVIEW",
-      "note": "SAFWA-016 offline recitation: locked manifest, local SHA-256 file verifier, review-only local just_audio player adapter, accessible locked status UI and Python/Dart source gates. No approved reciter/recordings or redistribution permission; no shipping playback; no streaming; scholarly and rights review pending."
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED_AUDIO_RIGHTS_BLOCKED",
+      "note": "SAFWA-016 source-only verified at exact SHA 01c00f1424508ffa0f4c19639459527aa55859dd on Kali: 131 Flutter, 14 Python and analyzer clean. Al-Huzaifi nominated as audio candidate but redistribution rights and independent recitation reviews missing. No bundled recordings or enabled playback."
     },
     {
       "module": "learning",
@@ -111,8 +111,13 @@
     },
     {
       "module": "offline_recitation_review_foundation",
+      "stage": "SOURCE_ONLY_KALI_GATE_PASSED",
+      "note": "SAFWA-016 owner Kali verification at SHA 01c00f1424508ffa0f4c19639459527aa55859dd: 131 Flutter, 14 Python, analyzer clean; offline audio and public release remain locked. SAFWA-015D physical device recovery still unverified."
+    },
+    {
+      "module": "ai_assisted_devsecops_confidentiality",
       "stage": "SOURCE_IMPLEMENTED_PENDING_KALI_VALIDATION",
-      "note": "SAFWA-016: 14 Flutter source tests and 3 Python audio release-gate tests newly defined; target 131 Flutter +14 Quran/audio Python checks, unexecuted. Full-file MP3 review foundation only; per-ayah segmentation/downloads/media-device decoder QA pending. Physical-device SAFWA-015D durability validation independently pending."
+      "note": "SAFWA-017 draft hardening: AI workspace deny guidance; secret/data .gitignore; staged Gitleaks hook opt-in; pinned read-only Gitleaks/Semgrep CI; dependency baseline; tracked secret-path/release policy tests; corrected brand rights false. New source checks and GitHub Actions not yet verified. App release, device durability, audio and Quran approval remain blocked."
     }
   ],
   "quran_reader_activation": "BLOCKED",
