@@ -34,7 +34,9 @@ NONRELEASABLE = (
 
 
 def sensitive_path(path):
-    normalized = path.replace("\\", "/").lstrip("./")
+    normalized = path.replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
     name = PurePosixPath(normalized).name.lower()
     dirs = {part.lower() for part in PurePosixPath(normalized).parts[:-1]}
     if dirs & PRIVATE_DIRS or name in PRIVATE_NAMES:
