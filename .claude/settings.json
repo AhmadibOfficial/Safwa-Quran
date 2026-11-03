@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./private/**)",
+      "Read(./client_data/**)",
+      "Read(./secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/*.p12)",
+      "Read(./**/*.jks)",
+      "Read(./**/*.keystore)",
+      "Read(./**/*.sqlite)",
+      "Read(./**/*.sqlite3)",
+      "Read(./**/*.db)",
+      "Read(./**/*credentials*.json)",
+      "Read(./**/google-services.json)",
+      "Read(./**/GoogleService-Info.plist)",
+      "Bash(sudo *)",
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(git clean *)",
+      "Bash(git reset --hard *)",
+      "Bash(flutter build *)",
+      "Bash(gh release *)",
+      "Bash(docker *)"
+    ]
+  }
+}
