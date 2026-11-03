@@ -420,7 +420,8 @@ class LocalSafwaBackup {
       if (prefs.isSqliteCanonical) {
         // The entire authenticated/validated input is written using a single
         // SQLite transaction. Never write a plaintext legacy undo journal.
-        return prefs.restoreCanonicalJson(jsonText);
+        // Hold the busy guard until the SQLite transaction completes.
+        return await prefs.restoreCanonicalJson(jsonText);
       }
       await _recover(prefs);
       final incoming = inspect(jsonText);
