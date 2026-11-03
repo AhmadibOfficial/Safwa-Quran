@@ -1,5 +1,5 @@
 # Safwa Quran — صفوة القرآن
-Official Safwa Institute Flutter project. Project source is private.
+Independent offline-first Quran project initiated by Ahmad Ibrahim. Safwa Studios collaboration and use of the Safwa Institute name/logo are under discussion and not formally authorized. This branch is source-only; public release remains blocked.
 
 SAFWA-003: 114-surah offline directory, search, reading interface, persisted Surah and ayah bookmarks, adjustable Arabic font, continue-reading progress, fail-closed verified-text gate, and automated CI checks. A **complete 6,236-ayah original-source copy and verbatim-matched JSON candidate now exist in `sources/review_only/`**. They are NOT bundled in the application or independently approved.
 
