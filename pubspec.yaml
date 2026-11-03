@@ -1,5 +1,5 @@
 name: safwa_quran
-description: Safwa Institute offline-first Quran application
+description: Independent offline-first Quran companion under discussion; no institutional affiliation authorized
 publish_to: none
 version: 0.3.0+3
 environment:
