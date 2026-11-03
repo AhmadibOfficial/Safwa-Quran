@@ -1,0 +1,22 @@
+rules:
+  - id: safwa-python-shell-injection
+    message: "Avoid shell=True; use explicit validated argument arrays."
+    languages: [python]
+    severity: ERROR
+    patterns:
+      - pattern: subprocess.$F(..., shell=True, ...)
+  - id: safwa-python-eval
+    message: "Do not use eval() on untrusted strings."
+    languages: [python]
+    severity: ERROR
+    pattern: eval(...)
+  - id: safwa-dart-tls-bypass
+    message: "Do not bypass TLS certificate validation in Dart networking."
+    languages: [dart]
+    severity: ERROR
+    pattern: $C.badCertificateCallback = ...
+  - id: safwa-dart-external-process
+    message: "Review shell process spawning in application code."
+    languages: [dart]
+    severity: WARNING
+    pattern: Process.run(...)
