@@ -34,6 +34,8 @@ ALLOWED_TEST_SAMPLES = (b"example", b"synthetic", b"placeholder", b"dummy", b"re
 
 
 def protected_path(path: str) -> bool:
+    if path in {".env.example", ".env.sample"}:
+        return False
     segments = path.split("/")
     return (
         any(part.lower() in SENSITIVE_DIRS for part in segments)
