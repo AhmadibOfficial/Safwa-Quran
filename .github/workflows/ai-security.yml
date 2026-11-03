@@ -1,0 +1,67 @@
+name: Safwa AI and Supply Chain Security
+on:
+  pull_request:
+    branches: [main, 'feature/**']
+  push:
+    branches: [main, 'feature/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets-and-source-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: false
+      - name: Verify tracked-file and content-release policy
+        run: |
+          python3 scripts/ai_security_preflight.py
+          python3 scripts/check_offline_audio.py
+          python3 -m unittest discover -s scripts/tests -v
+      - name: Install pinned Gitleaks v8
+        run: |
+          go install github.com/zricethezav/gitleaks/v8@v8.24.3
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Detect exposed secrets in checked-out Git history
+        run: gitleaks git --redact --no-banner --exit-code 1 .
+
+  static-application-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: .github/workflows/ai-security.yml
+      - name: Install reviewed Semgrep version (Dart and Python)
+        run: python -m pip install --disable-pip-version-check 'semgrep==1.183.0'
+      - name: Offline local Semgrep rules (do not upload source)
+        env:
+          SEMGREP_SEND_METRICS: 'off'
+        run: |
+          semgrep scan --metrics=off --disable-version-check --error \
+            --config .semgrep/safwa-security.yml lib scripts
+      - name: Validate GitHub workflows and format
+        run: |
+          python3 -m json.tool .claude/settings.json >/dev/null
+          python3 -m json.tool config/feature_status.json >/dev/null
+          bash -n scripts/security-preflight.sh .githooks/pre-commit
+
+# CI intentionally has no deployment job, production environment, cloud keys,
+# repository write permission, or auto-merge. Required reviews and branch rules
+# must be enforced separately by the repository owner.
