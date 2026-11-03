@@ -30,7 +30,9 @@ ASSIGNMENT = re.compile(
 )
 # Only scan executable/config sources to avoid false alarms in safety docs.
 CODE_SUFFIXES = {".py", ".dart", ".sh", ".yml", ".yaml", ".json", ".toml"}
-ALLOWED_TEST_SAMPLES = (b"example", b"synthetic", b"placeholder", b"dummy", b"replace_me")
+# Only unmistakable synthetic fixture prefixes are exempt. Do not
+# suppress a suspicious value merely because it contains 'synthetic'.
+ALLOWED_TEST_SAMPLES = (b"synthetic_", b"dummy_", b"placeholder_", b"replace_me")
 
 
 def protected_path(path: str) -> bool:
@@ -47,7 +49,7 @@ def protected_path(path: str) -> bool:
 def suspicious_assignment(blob: bytes) -> bool:
     for item in ASSIGNMENT.finditer(blob):
         value = item.group(1).strip().lower()
-        if not any(sample in value for sample in ALLOWED_TEST_SAMPLES):
+        if not any(value.startswith(sample) for sample in ALLOWED_TEST_SAMPLES):
             return True
     return False
 
