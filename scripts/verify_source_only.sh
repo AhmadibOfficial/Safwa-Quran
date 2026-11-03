@@ -22,6 +22,10 @@ command -v flutter >/dev/null || {
   exit 1
 }
 
+echo "===== AI confidentiality and tracked-source guard ====="
+python3 scripts/ai_security_preflight.py
+bash -n scripts/security-preflight.sh .githooks/pre-commit
+
 echo "===== Offline Quran integrity tests ====="
 python3 -m unittest discover -s scripts/tests -v
 python3 scripts/quran_pipeline.py check
